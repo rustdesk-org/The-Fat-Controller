@@ -1,5 +1,5 @@
 use std::{thread, time::Duration};
-use tfc::{Context, Error, traits::*};
+use tfc::{traits::*, Context, Error};
 
 // `unicode_char('s')` should always type an `s` no matter what the keyboard
 // layout is. `ascii_char(b's')` will press the key in the position of an `s` on
@@ -13,13 +13,18 @@ fn main() -> Result<(), Error> {
 
     let mut ctx = Context::new()?;
 
-    for c in b' '..=b'~' {
-        thread::sleep(delay);
-        ctx.unicode_char(c as char)?;
-        ctx.ascii_char(b' ')?;
-        ctx.ascii_char(c)?;
-        ctx.ascii_char(b'\n')?;
-    }
+    // dbg!(ctx.key_map.get(&'A'));
+
+    // for c in b' '..=b'~' {
+    //     thread::sleep(delay);
+    //     ctx.unicode_char(c as char)?;
+    //     ctx.ascii_char(b' ')?;
+    //     ctx.ascii_char(c)?;
+    //     ctx.ascii_char(b'\n')?;
+    // }
+
+    let c = '1';
+    ctx.unicode_char(c as char)?;
 
     Ok(())
 }

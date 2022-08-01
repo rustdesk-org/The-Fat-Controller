@@ -10,8 +10,8 @@ mod screen;
 use error::PlatformError;
 type Error = crate::GenericError<PlatformError>;
 
-#[derive(Copy, Clone)]
-struct KeyInfo {
+#[derive(Copy, Clone, Debug)]
+pub struct KeyInfo {
     keysym: ffi::KeySym,
     group: u8,
     modifiers: u8,
