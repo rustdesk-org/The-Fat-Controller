@@ -31,6 +31,9 @@ pub struct Context {
     modifier_map: *const ffi::XModifierKeymap,
 }
 
+unsafe impl Sync for Context {}
+unsafe impl Send for Context {}
+
 unsafe fn no_xtest(display: *mut ffi::Display) -> bool {
     // Passing null pointers for the things we don't need results in a
     // segfault.

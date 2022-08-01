@@ -32,11 +32,15 @@ pub type KeySym = XID;
 #[allow(non_upper_case_globals)]
 pub const NoSymbol: KeySym = 0;
 
+#[derive(Eq, PartialEq, Clone, Copy)]
 #[repr(C)]
 pub struct XModifierKeymap {
     pub max_keypermod: c_int,
     pub modifiermap: *const KeyCode,
 }
+
+unsafe impl Sync for XModifierKeymap {}
+unsafe impl Send for XModifierKeymap {}
 
 #[link(name = "X11")]
 extern {

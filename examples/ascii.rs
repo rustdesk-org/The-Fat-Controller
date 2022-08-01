@@ -1,4 +1,8 @@
-use std::{thread, time::Duration};
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
 use tfc::{traits::*, Context, Error};
 
 // `unicode_char('s')` should always type an `s` no matter what the keyboard
@@ -8,10 +12,14 @@ use tfc::{traits::*, Context, Error};
 // might result in a different character being typed. For example, using Dvorak
 // would result in an `o` being typed if the `s` key is pressed.
 
+lazy_static::lazy_static! {
+    static ref KBD_CONTEXT: Mutex<Context> = Mutex::new(Context::new().expect("error"));
+}
+
 fn main() -> Result<(), Error> {
     let delay = Duration::from_millis(50);
 
-    let mut ctx = Context::new()?;
+    // let mut ctx: Mutex<Context> = Mutex::new(Context::new().unwrap());
 
     // dbg!(ctx.key_map.get(&'A'));
 
@@ -24,7 +32,7 @@ fn main() -> Result<(), Error> {
     // }
 
     let c = '1';
-    ctx.unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
 
     Ok(())
 }
