@@ -26,7 +26,7 @@ pub struct Context {
     display: *mut ffi::Display,
     screen_number: std::ffi::c_int,
     scroll: crate::linux_common::ScrollAccum,
-    key_map: std::collections::HashMap<char, KeyInfo>,
+    pub key_map: std::collections::HashMap<char, KeyInfo>,
     unused_keycode: ffi::KeyCode,
     modifier_map: *const ffi::XModifierKeymap,
 }
@@ -123,7 +123,8 @@ unsafe fn create_key_map(
 
     for keycode in min_keycode..=max_keycode {
         let groups = ffi::XkbKeyNumGroups(desc, keycode);
-        for group in 0..groups {
+        // groups represents all keyboard layouts.
+        for group in 0..1 {
             let key_type = ffi::XkbKeyKeyType(desc, keycode, group);
             for level in 0..(*key_type).num_levels {
                 let keysym = ffi::XkbKeycodeToKeysym(display, keycode, group as c_uint, level as c_uint);
