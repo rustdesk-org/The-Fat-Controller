@@ -1,7 +1,13 @@
 #![allow(clippy::field_reassign_with_default)]
 
+use winapi::um::winuser::{INPUT_u, KEYBDINPUT};
+
 use crate::Key;
-use super::{ffi, Context, Error};
+use super::{ffi::{self, VkKeyScanW, DWORD, WORD}, Context, Error};
+
+static UNICODE: u16 = 0x0004;
+static KEYUP: u16 = 0x0002;
+static KEYDOWN: u16 = 0;
 
 fn to_key_code(key: Key) -> ffi::WORD {
     use Key::*;
@@ -152,63 +158,26 @@ impl crate::KeyboardContext for Context {
 }
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
-    if ch.len_utf16() == 2 {
-        return Err(Error::UnsupportedUnicode(ch));
-    }
-    let state = unsafe {
-        ffi::VkKeyScanW(ch as ffi::WCHAR)
+    // send char
+    let res = unsafe { VkKeyScanW(ch as u16) };
+    let (vk, scan, flags): (i32, u16, u16) = if (res >> 8) & 0xFF == 0 {
+        ((res & 0xFF).into(), 0, 0)
+    } else {
+        (0, ch as _, UNICODE)
     };
-    if state == -1 {
-        return Err(Error::UnsupportedUnicode(ch));
-    }
 
-    let key = (state & 0xFF) as ffi::WORD;
-    let shift = state & (1 << 8) != 0;
-    let control = state & (1 << 9) != 0;
-    let alt = state & (1 << 10) != 0;
-    // There's another bit for a Hankaku key but there doesn't seem to be a
-    // key code for it.
-    // let hankaku = state & (1 << 11) != 0;
+    let state_flags = if down { KEYDOWN } else { KEYUP };
+    let flags: DWORD = (flags | state_flags).into();
+    let vk: WORD = vk as _;
+    let scan: WORD = scan;
 
     let mut input = ffi::INPUT::default();
     input.type_ = ffi::INPUT_KEYBOARD;
-
-    if down {
-        if shift {
-            input.u.ki.wVk = ffi::VK_LSHIFT;
-            ctx.send_input(&input)?;
-        }
-        if control {
-            input.u.ki.wVk = ffi::VK_LCONTROL;
-            ctx.send_input(&input)?;
-        }
-        if alt {
-            input.u.ki.wVk = ffi::VK_LMENU;
-            ctx.send_input(&input)?;
-        }
-
-        input.u.ki.wVk = key;
-        ctx.send_input(&input)?;
-    }
-
-    if up {
-        input.u.ki.dwFlags = ffi::KEYEVENTF_KEYUP;
-        input.u.ki.wVk = key;
-        ctx.send_input(&input)?;
-
-        if alt {
-            input.u.ki.wVk = ffi::VK_LMENU;
-            ctx.send_input(&input)?;
-        }
-        if control {
-            input.u.ki.wVk = ffi::VK_LCONTROL;
-            ctx.send_input(&input)?;
-        }
-        if shift {
-            input.u.ki.wVk = ffi::VK_LSHIFT;
-            ctx.send_input(&input)?;
-        }
-    }
+    input.u.ki.wVk = vk;
+    input.u.ki.wScan = scan;
+    input.u.ki.dwFlags = flags;
+    
+    ctx.send_input(&input)?;
 
     Ok(())
 }
