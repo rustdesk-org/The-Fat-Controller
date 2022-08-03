@@ -159,7 +159,12 @@ impl crate::KeyboardContext for Context {
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
     // send char
-    let (vk, scan, flags): (i32, u16, u16) = (0, ch as _, UNICODE);
+    let res = unsafe { VkKeyScanW(ch as u16) };
+    let (vk, scan, flags): (i32, u16, u16) = if ch.is_ascii() {
+        ((res & 0xFF).into(), 0, 0)
+    } else {
+        (0, ch as _, UNICODE)
+    };
 
     let state_flags = if down { KEYDOWN } else { KEYUP };
     let flags: DWORD = (flags | state_flags).into();
