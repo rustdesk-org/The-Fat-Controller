@@ -31,7 +31,7 @@ fn main() -> Result<(), Error> {
     //     ctx.ascii_char(b'\n')?;
     // }
 
-    let c = 'â'; // â
+    let c = '¡'; // â Q q ¡(shift+altgr)
     KBD_CONTEXT.lock().unwrap().unicode_char_down(c as char)?;
     KBD_CONTEXT.lock().unwrap().unicode_char_up(c as char)?;
     // dbg!(KBD_CONTEXT.lock().unwrap().key_map.get(&c));

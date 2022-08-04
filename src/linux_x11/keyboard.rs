@@ -95,6 +95,35 @@ unsafe fn modifier_event(ctx: &Context, modifiers: u8, press: ffi::Bool) -> Resu
     Ok(())
 }
 
+unsafe fn get_current_modifiers(ctx: &Context) -> Result<u32, Error>  {
+    let screen = ffi::XScreenOfDisplay(ctx.display, ctx.screen_number);
+    let window = ffi::XRootWindowOfScreen(screen);
+    // Passing null pointers for the things we don't need results in a
+    // segfault.
+    let mut root_return = ffi::None;
+    let mut child_return = ffi::None;
+    let mut root_x_return = 0;
+    let mut root_y_return = 0;
+    let mut win_x_return = 0;
+    let mut win_y_return = 0;
+    let mut mask_return = 0;
+    if ffi::XQueryPointer(
+        ctx.display,
+        window,
+        &mut root_return,
+        &mut child_return,
+        &mut root_x_return,
+        &mut root_y_return,
+        &mut win_x_return,
+        &mut win_y_return,
+        &mut mask_return,
+    ) == ffi::False {
+        Err(Error::Platform(PlatformError::XQueryPointer))
+    } else {
+        Ok(mask_return)
+    }
+}
+
 unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Result<(), Error> {
     // We cannot use XSendEvent here. XSendEvent marks events as fake by
     // setting the send_event property of the XEvent structure. Many
@@ -109,6 +138,15 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
     };
     if info.group != old_group {
         ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
+    }
+
+    let old_modifiers = get_current_modifiers(&ctx).unwrap_or(0) as u8;
+    // Keep modifers is 0
+    if (old_modifiers == 2 || old_modifiers == 16) && down{
+        modifier_event(ctx, old_modifiers, ffi::True)?;
+        modifier_event(ctx, old_modifiers, ffi::False)?;
+    }else if down{
+        modifier_event(ctx, old_modifiers, ffi::False)?;
     }
 
     // Press the modifiers before.
