@@ -1,6 +1,6 @@
 #![allow(clippy::field_reassign_with_default)]
 
-use winapi::um::winuser::{INPUT_u, KEYBDINPUT};
+use winapi::{um::winuser::{INPUT_u, KEYBDINPUT, VkKeyScanA, VkKeyScanExW, GetKeyboardLayout, GetKeyboardLayoutList}, shared::minwindef::{HKL}};
 
 use crate::Key;
 use super::{ffi::{self, VkKeyScanW, DWORD, WORD}, Context, Error};
@@ -159,8 +159,12 @@ impl crate::KeyboardContext for Context {
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
     // send char
-    let res = unsafe { VkKeyScanW(ch as u16) };
-    let (vk, scan, flags): (i32, u16, u16) = if ch.is_ascii() {
+
+    // 0x0000000008040804 -> US Keyboard: ^ will be translated as dead key in french keyboard.
+    let keyboard_layout = 0x0000000008040804 as _;
+
+    let res = unsafe { VkKeyScanExW(ch as _, keyboard_layout) };
+    let (vk, scan, flags): (i32, u16, u16) = if (res >> 8) & 0xFF == 0 {
         ((res & 0xFF).into(), 0, 0)
     } else {
         (0, ch as _, UNICODE)
