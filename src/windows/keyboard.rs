@@ -159,18 +159,14 @@ impl crate::KeyboardContext for Context {
     }
 }
 
-fn is_dead(vk: i32, scan: u16) -> bool{
-    let keyboard_layout = unsafe {
-        GetKeyboardLayout(0)
-    };
-    
+fn is_dead(layout: HKL, vk: i32, scan: u16) -> bool{
     const BUF_LEN: i32 = 32;
     let mut buff = [0_u16; BUF_LEN as usize];
     let buff_ptr = buff.as_mut_ptr();
     let mut state = [0; 256];
     let state_ptr = state.as_mut_ptr();
     let len = unsafe {
-        ToUnicodeEx(vk.try_into().unwrap_or_default(), scan.into(), state_ptr, buff_ptr, 8 - 1, 0, keyboard_layout)
+        ToUnicodeEx(vk.try_into().unwrap_or_default(), scan.into(), state_ptr, buff_ptr, 8 - 1, 0, layout)
     };
     len == -1
 }
@@ -199,11 +195,15 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
         send_vk(ctx, ffi::VK_MENU.into(), 0, 0, false)?;
     }
 
-    let res = unsafe { VkKeyScanW(ch as u16) };
+    let layout = unsafe {
+        GetKeyboardLayout(0)
+    };
+
+    let res = unsafe { VkKeyScanExW(ch as _, layout) };
     let (vk, scan, flags): (i32, u16, u16) = if (res >> 8) & 0xFF == 0 {
         let vk = (res & 0xFF) as i32;
         // Without dead key
-        if is_dead(vk, 0){
+        if is_dead(layout, vk, 0){
             (0, ch as _, UNICODE)}
         else{
             (vk, 0, 0)
