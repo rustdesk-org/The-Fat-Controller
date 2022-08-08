@@ -2,7 +2,7 @@
 
 use std::convert::TryInto;
 
-use winapi::{um::winuser::{INPUT_u, KEYBDINPUT, VkKeyScanA, VkKeyScanExW, GetKeyboardLayout, GetKeyboardLayoutList, ToUnicodeEx}, shared::minwindef::{HKL}};
+use winapi::{um::winuser::{INPUT_u, KEYBDINPUT, VkKeyScanA, VkKeyScanExW, GetKeyboardLayout, GetKeyboardLayoutList, ToUnicodeEx, GetKeyState}, shared::minwindef::{HKL}};
 
 use crate::Key;
 use super::{ffi::{self, VkKeyScanW, DWORD, WORD}, Context, Error};
@@ -177,7 +177,29 @@ fn is_dead(vk: i32, scan: u16) -> bool{
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
     // send char
-    let res = unsafe { VkKeyScanW(ch as u16) };;
+    let is_caps = unsafe{
+        GetKeyState(ffi::VK_CAPITAL.into()) < 0
+    };
+    let is_shift = unsafe {
+        GetKeyState(ffi::VK_SHIFT.into()) < 0
+    };
+    let is_alt = unsafe{
+        GetKeyState(ffi::VK_MENU.into()) < 0
+    };
+    // Keep modifers is 0
+    // bug: Ctrl + Shift + F not work
+    if is_caps && down{
+        send_vk(ctx, ffi::VK_CAPITAL.into(), 0, 0, true)?;
+        send_vk(ctx, ffi::VK_CAPITAL.into(), 0, 0, false)?;
+    }
+    if is_shift && down{
+        send_vk(ctx, ffi::VK_SHIFT.into(), 0, 0, false)?;
+    }
+    if is_alt && down{
+        send_vk(ctx, ffi::VK_MENU.into(), 0, 0, false)?;
+    }
+
+    let res = unsafe { VkKeyScanW(ch as u16) };
     let (vk, scan, flags): (i32, u16, u16) = if (res >> 8) & 0xFF == 0 {
         let vk = (res & 0xFF) as i32;
         // Without dead key
@@ -190,6 +212,12 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
         (0, ch as _, UNICODE)
     };
 
+    send_vk(ctx, vk, scan, flags, down)?;
+
+    Ok(())
+}
+
+fn send_vk(ctx: &Context, vk: i32, scan: u16, flags: u16, down: bool) -> Result<(), Error>{
     let state_flags = if down { KEYDOWN } else { KEYUP };
     let flags: DWORD = (flags | state_flags).into();
     let vk: WORD = vk as _;
