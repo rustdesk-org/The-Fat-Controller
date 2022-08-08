@@ -182,8 +182,10 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     let is_alt = unsafe{
         GetKeyState(ffi::VK_MENU.into()) < 0
     };
+    let is_control = unsafe{
+        GetKeyState(ffi::VK_CONTROL.into()) < 0
+    };
     // Keep modifers is 0
-    // bug: Ctrl + Shift + F not work
     if is_caps && down{
         send_vk(ctx, ffi::VK_CAPITAL.into(), 0, 0, true)?;
         send_vk(ctx, ffi::VK_CAPITAL.into(), 0, 0, false)?;
@@ -194,7 +196,12 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     if is_alt && down{
         send_vk(ctx, ffi::VK_MENU.into(), 0, 0, false)?;
     }
-
+    let mut ch = ch;
+    // Ctrl + Shift + F 
+    if is_shift && is_control && ch.is_uppercase() && down{
+        send_vk(ctx, ffi::VK_SHIFT.into(), 0, 0, true)?;
+        ch = ch.to_lowercase().collect::<Vec<_>>()[0] ;
+    }
     let layout = unsafe {
         let current_window_thread_id = GetWindowThreadProcessId(GetForegroundWindow(), null_mut());
         GetKeyboardLayout(current_window_thread_id)
@@ -215,6 +222,10 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     };
 
     send_vk(ctx, vk, scan, flags, down)?;
+    // Ctrl + Shift + F
+    if is_shift && is_control && ch.is_lowercase() && down{
+        send_vk(ctx, vk, scan, flags, false)?;
+    }
 
     Ok(())
 }
