@@ -6,6 +6,7 @@ mod screen;
 
 use error::PlatformError;
 type Error = crate::GenericError<PlatformError>;
+use core_graphics::event_source::CGEventSource;
 
 const SHIFT_BIT: u32 = 0;
 const OPTION_BIT: u32 = 1;
@@ -21,11 +22,16 @@ struct KeyInfo {
 /// The most useful methods are on the [`traits`](crate::traits).
 pub struct Context {
     hid_connect: ffi::io_connect_t,
-    event_source: core_graphics::event_source::CGEventSource,
+    event_source: Box<MyCGEventSource>,
     modifiers: ffi::IOOptionBits,
     button_state: u8,
     key_map: std::collections::HashMap<char, KeyInfo>,
 }
+
+#[derive(Clone)]
+pub struct MyCGEventSource(CGEventSource);
+unsafe impl Sync for MyCGEventSource {}
+unsafe impl Send for MyCGEventSource {}
 
 fn connect_to_service(name: *const u8, connect_type: u32) -> Result<ffi::io_connect_t, Error> {
     unsafe {
@@ -188,7 +194,7 @@ impl Context {
 
         Ok(Self {
             hid_connect,
-            event_source,
+            event_source: Box::new(MyCGEventSource(event_source)),
             modifiers: 0,
             button_state: 0,
             key_map,

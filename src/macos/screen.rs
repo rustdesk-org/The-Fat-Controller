@@ -1,9 +1,11 @@
 use super::Error;
 use core_graphics::{display::CGDisplay, event::CGEvent};
+use super::MyCGEventSource;
 
 impl crate::ScreenContext for super::Context {
     fn cursor_location(&self) -> Result<(i32, i32), Error> {
-        let event = match CGEvent::new(self.event_source.clone()) {
+        let MyCGEventSource(event_source) = &*self.event_source;
+        let event = match CGEvent::new(event_source.clone()) {
             Ok(e) => e,
             Err(()) => return Err(Error::Unknown),
         };

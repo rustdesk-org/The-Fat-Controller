@@ -291,8 +291,8 @@ impl crate::UnicodeKeyboardContext for Context {
         // split the string up. Also, special characters like tab, line-feed and
         // backspace work in TextEdit but not CLion. Maybe create a special case
         // for these?
-
-        let event = match CGEvent::new_keyboard_event(self.event_source.clone(), 0, true) {
+        let super::MyCGEventSource(event_source) = &*self.event_source;
+        let event = match CGEvent::new_keyboard_event(event_source.clone(), 0, true) {
             Ok(e) => e,
             Err(()) => return Err(Error::Unknown),
         };
