@@ -135,6 +135,7 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
     // instead.
 
     // Remember the old group then switch to the new group.
+    
     let old_group = {
         let mut state = std::mem::zeroed();
         ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
@@ -144,7 +145,7 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
         ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
     }
 
-    let old_modifiers = get_current_modifiers(&ctx).unwrap_or(0) as u8;
+    let old_modifiers = get_current_modifiers(ctx).unwrap_or(0) as u8;
     
     let is_shift = old_modifiers & 1 == 1;   // ShiftMask
     let is_capslock = old_modifiers & 2 == 2;   // LockMask
@@ -176,13 +177,14 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
         modifier_event(ctx, info.modifiers, ffi::False)?;
     }
 
+    // The layout is automatically restored as the user types.
     // Switching back to the old group now that we're done.
-    if info.group != old_group {
-        ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, old_group as c_uint);
-    }
+    // if info.group != old_group {
+    //     dbg!(ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, old_group as c_uint));
+    // }
 
     ffi::XSync(ctx.display, ffi::False);
-    thread::sleep(KEY_DELAY);
+    // thread::sleep(KEY_DELAY);
 
     Ok(())
 }

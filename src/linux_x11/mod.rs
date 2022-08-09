@@ -150,7 +150,6 @@ unsafe fn create_key_map(
                         return Err(Error::Platform(PlatformError::KeySymToUnicode));
                     }
                 };
-                dbg!(key_map.entry(charcode));
                 if let Entry::Vacant(entry) = key_map.entry(charcode) {
                     entry.insert(KeyInfo {
                         keysym,

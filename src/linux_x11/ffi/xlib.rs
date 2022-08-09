@@ -6,7 +6,7 @@ use std::ffi::{c_int, c_uint, c_ulong, c_void};
 #[allow(clippy::upper_case_acronyms)]
 type XID = c_ulong;
 
-#[derive(Eq, PartialEq, Clone, Copy)]
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
 #[repr(transparent)]
 pub struct Bool(c_int);
 #[repr(transparent)]
