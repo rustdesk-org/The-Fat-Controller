@@ -124,7 +124,7 @@ unsafe fn create_key_map(
     for keycode in min_keycode..=max_keycode {
         let groups = ffi::XkbKeyNumGroups(desc, keycode);
         // groups represents all keyboard layouts.
-        for group in 0..1 {
+        for group in 0..groups {
             let key_type = ffi::XkbKeyKeyType(desc, keycode, group);
             for level in 0..(*key_type).num_levels {
                 let keysym = ffi::XkbKeycodeToKeysym(display, keycode, group as c_uint, level as c_uint);
@@ -150,7 +150,7 @@ unsafe fn create_key_map(
                         return Err(Error::Platform(PlatformError::KeySymToUnicode));
                     }
                 };
-
+                dbg!(key_map.entry(charcode));
                 if let Entry::Vacant(entry) = key_map.entry(charcode) {
                     entry.insert(KeyInfo {
                         keysym,

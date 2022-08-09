@@ -31,7 +31,7 @@ fn main() -> Result<(), Error> {
     //     ctx.ascii_char(b'\n')?;
     // }
 
-    let c = 'B'; // â Q q ¡(shift+altgr) ^
+    let c = 'â'; // â Q q ¡(shift+altgr) ^
     KBD_CONTEXT.lock().unwrap().unicode_char_down(c as char)?;
 
     // use std::{thread, time::Duration};
