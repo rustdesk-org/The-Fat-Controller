@@ -31,8 +31,24 @@ fn main() -> Result<(), Error> {
     //     ctx.ascii_char(b'\n')?;
     // }
 
-    let c = 'A'; // â Q q ¡(shift+altgr) ^ \\
+    let c = 'b'; // â Q q ¡(shift+altgr) ^ \\
     KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
+    
+    // KBD_CONTEXT.lock().unwrap().unicode_char_down(c as char)?;
+
+    // use std::{thread, time::Duration};
+    // thread::sleep(Duration::from_millis(4000));
+
+    // KBD_CONTEXT.lock().unwrap().unicode_char_up(c as char)?;
+    // dbg!(KBD_CONTEXT.lock().unwrap().key_map.get(&c));
 
     Ok(())
 }

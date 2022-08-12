@@ -1,6 +1,6 @@
 use crate::{Key, linux_common};
 use super::{ffi, Context, Error, KeyInfo, PlatformError};
-use std::{thread, time::Duration, os::raw::{c_int, c_uint}};
+use std::{time::{Duration}, os::raw::{c_int, c_uint}};
 
 fn key_event(ctx: &Context, key: Key, down: bool) -> Result<(), Error> {
     unsafe {
@@ -136,15 +136,7 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
 
     // Remember the old group then switch to the new group.
     
-    let old_group = {
-        let mut state = std::mem::zeroed();
-        ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
-        state.group
-    };
-    if info.group != old_group {
-        ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
-    }
-
+    // TODO: Need to optimize to improve response speed.
     let old_modifiers = get_current_modifiers(ctx).unwrap_or(0) as u8;
     
     let is_shift = old_modifiers & 1 == 1;   // ShiftMask
@@ -177,14 +169,8 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
         modifier_event(ctx, info.modifiers, ffi::False)?;
     }
 
-    // The layout is automatically restored as the user types.
-    // Switching back to the old group now that we're done.
-    // if info.group != old_group {
-    //     dbg!(ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, old_group as c_uint));
-    // }
-
+    ffi::XFlush(ctx.display);
     ffi::XSync(ctx.display, ffi::False);
-    // thread::sleep(KEY_DELAY);
 
     Ok(())
 }
@@ -198,6 +184,7 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     unsafe {
         // If a keysym is not on the default keyboard mapping, we remap the
         // unused keycode.
+        // TODO: insert into the key_map
         if !info.default {
             ffi::XChangeKeyboardMapping(
                 ctx.display,
@@ -206,7 +193,16 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
                 &info.keysym,
                 1,
             );
-            ffi::XSync(ctx.display, ffi::False);
+        }
+
+        let old_group = {
+            let mut state = std::mem::zeroed();
+            ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
+            state.group
+        };
+        
+        if info.group != old_group {
+            ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
         }
 
         if down {
@@ -215,12 +211,6 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
         if up {
             key_with_mods_event(ctx, &info, false)?;
         }
-
-        if !info.default {
-            ffi::XSync(ctx.display, ffi::False);
-        }
-
-        // The keyboard mapping is reset inside Drop.
     }
 
     Ok(())
