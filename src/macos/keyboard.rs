@@ -1,3 +1,4 @@
+use std::{thread, time, time::Duration};
 use crate::Key;
 use unicode_segmentation::UnicodeSegmentation;
 use core_graphics::event::{CGEvent, CGEventTapLocation};
@@ -255,11 +256,13 @@ fn char_event(ctx: &mut Context, ch: char, down: bool, up: bool) -> Result<(), E
 
         event.key.keyCode = info.key_code as u16;
         ctx.post_event(ffi::NX_KEYDOWN, &event, 0, 0)?;
+        thread::sleep(time::Duration::from_millis(20));
     }
 
     if up {
         event.key.keyCode = info.key_code as u16;
         ctx.post_event(ffi::NX_KEYUP, &event, 0, 0)?;
+        thread::sleep(time::Duration::from_millis(20));
 
         if info.modifiers & (1 << OPTION_BIT) != 0 {
             modifier_key_event(ctx, &mut event, ffi::kVK_Option, ffi::NX_DEVICELALTKEYMASK, false)?;
@@ -282,7 +285,13 @@ impl crate::UnicodeKeyboardContext for Context {
     }
 
     fn unicode_char(&mut self, ch: char) -> Result<(), Error> {
-        char_event(self, ch, true, true)
+        match char_event(self, ch, true, true){
+            Ok(_) => Ok(()),
+            Err(err) => {
+                self.unicode_string(&ch.to_string());
+                Ok(())
+            }
+        }
     }
 
     fn unicode_string(&mut self, s: &str) -> Result<(), Error> {
@@ -300,6 +309,7 @@ impl crate::UnicodeKeyboardContext for Context {
             event.set_string(grapheme);
             event.post(CGEventTapLocation::HID);
         }
+        thread::sleep(Duration::from_millis(20));
 
         Ok(())
     }
