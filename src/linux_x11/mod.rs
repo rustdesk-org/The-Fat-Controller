@@ -139,7 +139,6 @@ unsafe fn create_key_map(
         num_groups += 1;
     }
     num_groups = num_groups - 1;
-    dbg!(num_groups);
     ////////////////////////////////////////////////////////////////
     let mut key_map_vec :Vec<std::collections::HashMap<char, KeyInfo>> = Vec::with_capacity(num_groups.into());
     for i in 0..num_groups.into() {
@@ -156,7 +155,6 @@ unsafe fn create_key_map(
             }else{
                 break;
             };
-            dbg!(group);
             let key_type = ffi::XkbKeyKeyType(desc, keycode, group);
             for level in 0..(*key_type).num_levels {
                 let keysym = ffi::XkbKeycodeToKeysym(display, keycode, group as c_uint, level as c_uint);

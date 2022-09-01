@@ -208,7 +208,6 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     };
 
     let res = unsafe { VkKeyScanExW(ch as _, layout) };
-    dbg!(layout, res);
     let (vk, scan, flags): (i32, u16, u16) = if (res >> 8) & 0xFF == 0 {
         let vk = (res & 0xFF) as i32;
         // Without dead key
