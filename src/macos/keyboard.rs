@@ -31,11 +31,11 @@ fn to_key_code(key: Key) -> GroupedKey {
         Shift => Modifier(kVK_Shift, NX_DEVICELSHIFTKEYMASK),
         Control => Modifier(kVK_Control, NX_DEVICELCTLKEYMASK),
         Alt => Modifier(kVK_Option, NX_DEVICELALTKEYMASK),
-        Meta | ControlOrMeta => Modifier(kVK_Command, NX_DEVICELCMDKEYMASK),
+        Meta  => Modifier(kVK_Command, NX_DEVICELCMDKEYMASK),
         RightShift => Modifier(kVK_RightShift, NX_DEVICERSHIFTKEYMASK),
         RightControl => Modifier(kVK_RightControl, NX_DEVICERCTLKEYMASK),
         RightAlt => Modifier(kVK_RightOption, NX_DEVICERALTKEYMASK),
-        RightMeta | RightControlOrMeta => Modifier(kVK_RightCommand, NX_DEVICERCMDKEYMASK),
+        RightMeta  => Modifier(kVK_RightCommand, NX_DEVICERCMDKEYMASK),
         Fn => Modifier(kVK_Function, NX_SECONDARYFNMASK),
 
         ReturnOrEnter => Regular(kVK_Return),
@@ -143,6 +143,7 @@ fn to_key_code(key: Key) -> GroupedKey {
         VolumeUp => Media(NX_KEYTYPE_SOUND_UP),
         VolumeDown => Media(NX_KEYTYPE_SOUND_DOWN),
         Mute => Media(NX_KEYTYPE_MUTE),
+        _ => Regular(kVK_ANSI_A),
     }
 }
 
