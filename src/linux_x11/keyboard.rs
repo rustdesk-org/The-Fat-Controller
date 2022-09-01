@@ -136,23 +136,24 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
 
     // Remember the old group then switch to the new group.
     
-    // TODO: Need to optimize to improve response speed.
-    let old_modifiers = get_current_modifiers(ctx).unwrap_or(0) as u8;
+    // TODO
+    // // TODO: Need to optimize to improve response speed.
+    // let old_modifiers = get_current_modifiers(ctx).unwrap_or(0) as u8;
     
-    let is_shift = old_modifiers & 1 == 1;   // ShiftMask
-    let is_capslock = old_modifiers & 2 == 2;   // LockMask
-    let is_altgr = old_modifiers & 128 == 128;  // Mod5Mask
-    // Keep modifers is 0
-    if is_capslock && down{
-        modifier_event(ctx, 2, ffi::True)?;
-        modifier_event(ctx, 2, ffi::False)?;
-    }
-    if is_shift && down{
-        modifier_event(ctx, 1, ffi::False)?;
-    }
-    if is_altgr && down{
-        modifier_event(ctx, 128, ffi::False)?;
-    }
+    // let is_shift = old_modifiers & 1 == 1;   // ShiftMask
+    // let is_capslock = old_modifiers & 2 == 2;   // LockMask
+    // let is_altgr = old_modifiers & 128 == 128;  // Mod5Mask
+    // // Keep modifers is 0
+    // if is_capslock && down{
+    //     modifier_event(ctx, 2, ffi::True)?;
+    //     modifier_event(ctx, 2, ffi::False)?;
+    // }
+    // if is_shift && down{
+    //     modifier_event(ctx, 1, ffi::False)?;
+    // }
+    // if is_altgr && down{
+    //     modifier_event(ctx, 128, ffi::False)?;
+    // }
 
     // Press the modifiers before.
     if info.modifiers != 0 && down {
