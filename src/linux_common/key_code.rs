@@ -33,6 +33,8 @@ pub fn to_key_code(key: Key) -> u16 {
         Comma => KEY_COMMA,
         Period => KEY_DOT,
         Slash => KEY_SLASH,
+        IntlBackslash => KEY_102ND, // TODO
+        Apps => KEY_COMPOSE,        // TODO: ???
         UpArrow => KEY_UP,
         RightArrow => KEY_RIGHT,
         DownArrow => KEY_DOWN,
@@ -41,6 +43,10 @@ pub fn to_key_code(key: Key) -> u16 {
         PageDown => KEY_PAGEDOWN,
         Home => KEY_HOME,
         End => KEY_END,
+        Insert => KEY_INSERT,
+        PrintScreen => KEY_SYSRQ,   // TODO: ???
+        ScrollLock => KEY_SCROLLLOCK,// TODO
+        Pause => KEY_PAUSE,         // TODO
         A => KEY_A,
         B => KEY_B,
         C => KEY_C,
