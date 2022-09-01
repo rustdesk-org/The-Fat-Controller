@@ -18,11 +18,11 @@ fn to_key_code(key: Key) -> ffi::WORD {
     match key {
         CapsLock => VK_CAPITAL,
         Shift => VK_LSHIFT,
-        Control | ControlOrMeta => VK_LCONTROL,
+        Control => VK_LCONTROL,
         Alt => VK_LMENU,
         Meta => VK_LWIN,
         RightShift => VK_RSHIFT,
-        RightControl | RightControlOrMeta => VK_RCONTROL,
+        RightControl => VK_RCONTROL,
         RightAlt => VK_RMENU,
         RightMeta => VK_RWIN,
         // There is no virtual key code for Fn.
@@ -127,6 +127,7 @@ fn to_key_code(key: Key) -> ffi::WORD {
         VolumeUp => VK_VOLUME_UP,
         VolumeDown => VK_VOLUME_DOWN,
         Mute => VK_VOLUME_MUTE,
+        _ => VK_A,
     }
 }
 
