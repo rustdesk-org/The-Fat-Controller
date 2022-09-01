@@ -5,12 +5,12 @@ enumeration!(Key, "A keyboard key used by the [`KeyboardContext`](crate::Keyboar
     (Control, "Control"),   // ControlLeft
     (Alt, "Alt"),           // Alt
     (Meta, "Meta"),         // MetaLeft. Command on macOS. Windows key on Windows.
-    (ControlOrMeta, "Control or Meta"),     // ControlLeft. Command on macOS. Control on Windows.
+    // repeat (ControlOrMeta, "Control or Meta"),     // ControlLeft. Command on macOS. Control on Windows.
     (RightShift, "Right Shift"),            // ShiftRight
     (RightControl, "Right Control"),        // ControlRight
     (RightAlt, "Right Alt"),                // AltGr
     (RightMeta, "Right Meta"),              // MetaRight. Command on macOS. Windows key on Windows.
-    (RightControlOrMeta, "Right Control or Meta"),  //ControlRight. Command on macOS. Control on Windows.
+    // repeat (RightControlOrMeta, "Right Control or Meta"),  //ControlRight. Command on macOS. Control on Windows.
     (Fn, "Fn"),
 
     // Controls and symbols
@@ -46,6 +46,7 @@ enumeration!(Key, "A keyboard key used by the [`KeyboardContext`](crate::Keyboar
     (End, "End"),   // End
     (Insert, "Insert"),         // Insert
     (PrintScreen, "PrintScreen"),// PrintScreen
+    (Print, "Print"),           // Print
     (ScrollLock, "ScrollLock"), // ScrollLock
     (Pause, "Pause"),           // Pause
     (NumLock, "Num Lock"),      // NumLock
