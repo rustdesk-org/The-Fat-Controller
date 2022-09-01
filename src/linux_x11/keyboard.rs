@@ -32,8 +32,12 @@ impl crate::KeyboardContext for Context {
 // delay only at the point where the layout changes doesn't work.
 const KEY_DELAY: Duration = Duration::from_millis(25);
 
-fn info_from_char(ctx: &Context, ch: char) -> Option<KeyInfo> {
-    if let Some(info) = ctx.key_map.get(&ch) {
+fn info_from_char(ctx: &Context, group: u8, ch: char) -> Option<KeyInfo> {
+    dbg!(group);
+    dbg!(ch);
+    let key_map: &std::collections::HashMap<char, KeyInfo> = ctx.key_map_vec.get(group as usize).unwrap();
+    if let Some(info) = key_map.get(&ch) {
+        dbg!(info.keycode);
         return Some(*info);
     }
 
@@ -177,7 +181,12 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
 }
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
-    let info = match info_from_char(ctx, ch) {
+    let group = unsafe{
+        let mut state = std::mem::zeroed();
+        ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
+        state.group
+    };
+    let info = match info_from_char(ctx, group, ch) {
         Some(info) => info,
         None => return Err(Error::UnsupportedUnicode(ch)),
     };
@@ -196,15 +205,15 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
             );
         }
 
-        let old_group = {
-            let mut state = std::mem::zeroed();
-            ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
-            state.group
-        };
+        // let old_group = {
+        //     let mut state = std::mem::zeroed();
+        //     ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
+        //     state.group
+        // };
         
-        if info.group != old_group {
-            ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
-        }
+        // if info.group != old_group {
+        //     ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
+        // }
 
         if down {
             key_with_mods_event(ctx, &info, true)?;
@@ -231,14 +240,14 @@ impl crate::UnicodeKeyboardContext for Context {
     }
 
     fn unicode_string(&mut self, s: &str) -> Result<(), Error> {
-        for ch in s.chars() {
-            if info_from_char(self, ch).is_none() {
-                return Err(Error::UnsupportedUnicode(ch));
-            }
-        }
-        for ch in s.chars() {
-            self.unicode_char(ch)?;
-        }
+        // for ch in s.chars() {
+        //     if info_from_char(self, ch).is_none() {
+        //         return Err(Error::UnsupportedUnicode(ch));
+        //     }
+        // }
+        // for ch in s.chars() {
+        //     self.unicode_char(ch)?;
+        // }
         Ok(())
     }
 }

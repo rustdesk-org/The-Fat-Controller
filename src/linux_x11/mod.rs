@@ -26,7 +26,7 @@ pub struct Context {
     display: *mut ffi::Display,
     screen_number: std::ffi::c_int,
     scroll: crate::linux_common::ScrollAccum,
-    pub key_map: std::collections::HashMap<char, KeyInfo>,
+    pub key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>>,
     unused_keycode: ffi::KeyCode,
     modifier_map: *const ffi::XModifierKeymap,
 }
@@ -95,7 +95,7 @@ unsafe fn create_key_map(
     display: *mut ffi::Display,
     min_keycode: ffi::KeyCode,
     max_keycode: ffi::KeyCode,
-) -> Result<std::collections::HashMap<char, KeyInfo>, Error> {
+) -> Result<Vec<std::collections::HashMap<char, KeyInfo>>, Error> {
 
     // Fuck, this library is so inconsistent. Sometimes a keycode is a
     // KeyCode and sometimes it's an int. Sometimes a group is an int
@@ -119,12 +119,44 @@ unsafe fn create_key_map(
         return Err(Error::Platform(PlatformError::XkbGetMap));
     }
 
-    let mut key_map = HashMap::new();
+
+    ////////////////////////////////////////////////////////////////
+    use x11::xlib;
+    const XKB_ALL_NAMES_MASK: c_uint = 0x3fff;
+    const XKB_ALL_CTRLS_MASK: std::os::raw::c_ulong = 0xF8001FFF;
+
+    let ndisplay = xlib::XOpenDisplay(std::ptr::null());
+    let keyboard: xlib::XkbDescPtr = xlib::XkbAllocKeyboard();
+    (*keyboard).dpy = ndisplay;
+    xlib::XkbGetNames(ndisplay, XKB_ALL_NAMES_MASK, keyboard);
+    xlib::XkbGetControls(ndisplay, XKB_ALL_CTRLS_MASK, keyboard);
+    let mut num_groups: u8 = 0;
+    let group_source = (*(*keyboard).names).groups;
+    for group in group_source.iter() {
+        if *group == 0 {
+            break;
+        }
+        num_groups += 1;
+    }
+    num_groups = num_groups - 1;
+    dbg!(num_groups);
+    ////////////////////////////////////////////////////////////////
+    let mut key_map_vec :Vec<std::collections::HashMap<char, KeyInfo>> = Vec::with_capacity(num_groups.into());
+    for i in 0..num_groups.into() {
+        let mut key_map = HashMap::new();
+        key_map_vec.push(key_map);
+    }
 
     for keycode in min_keycode..=max_keycode {
         let groups = ffi::XkbKeyNumGroups(desc, keycode);
         // groups represents all keyboard layouts.
         for group in 0..groups {
+            let key_map = if group < num_groups.into(){
+                key_map_vec.get_mut(group as usize).unwrap()
+            }else{
+                break;
+            };
+            dbg!(group);
             let key_type = ffi::XkbKeyKeyType(desc, keycode, group);
             for level in 0..(*key_type).num_levels {
                 let keysym = ffi::XkbKeycodeToKeysym(display, keycode, group as c_uint, level as c_uint);
@@ -160,12 +192,13 @@ unsafe fn create_key_map(
                     });
                 }
             }
+            
         }
     }
 
     ffi::XkbFreeClientMap(desc, 0, ffi::True);
 
-    Ok(key_map)
+    Ok(key_map_vec)
 }
 
 impl Context {
@@ -197,7 +230,7 @@ impl Context {
                 }
             };
 
-            let key_map = match create_key_map(display, min_keycode, max_keycode) {
+            let key_map_vec = match create_key_map(display, min_keycode, max_keycode) {
                 Ok(m) => m,
                 Err(e) => {
                     ffi::XCloseDisplay(display);
@@ -215,7 +248,7 @@ impl Context {
                 display,
                 screen_number: ffi::XDefaultScreen(display),
                 scroll: Default::default(),
-                key_map,
+                key_map_vec,
                 unused_keycode,
                 modifier_map,
             })
