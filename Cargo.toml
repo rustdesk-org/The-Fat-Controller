@@ -18,6 +18,9 @@ check-x11 = []
 x11 = []
 ascii-fallback = []
 
+[target.'cfg(target_os = "linux")'.dependencies]
+x11 = { git="https://github.com/bjornsnoen/x11-rs", features = ["xlib"] }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 # Both of these are required for UnicodeKeyboardContext::unicode_string
 unicode-segmentation = "1.10"
