@@ -47,6 +47,7 @@ pub fn to_key_code(key: Key) -> u16 {
         PrintScreen => KEY_SYSRQ,   // TODO: ???
         ScrollLock => KEY_SCROLLLOCK,// TODO
         Pause => KEY_PAUSE,         // TODO
+        NumLock => KEY_NUMLOCK,
         A => KEY_A,
         B => KEY_B,
         C => KEY_C,
