@@ -2,7 +2,6 @@ use crate::Key;
 
 pub fn to_key_code(key: Key) -> u16 {
     use super::ffi::*;
-
     use Key::*;
     match key {
         CapsLock => KEY_CAPSLOCK,

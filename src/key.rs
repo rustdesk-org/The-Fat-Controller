@@ -20,7 +20,6 @@ enumeration!(
         (Escape, "Escape"),                         // Escape
         (DeleteOrBackspace, "Delete or Backspace"), // Backspace
         (ForwardDelete, "Forward Delete"),          // Delete
-        (Insert, "Insert"),
         (Tab, "Tab"),                               // Tab
         (Space, "Space"),                           // Space
         (Minus, "Minus"),                           // Minus

@@ -191,6 +191,8 @@ unsafe fn create_key_map(
         }
     }
 
+    println!("REMOVE ME ======================== {:?}", &key_map_vec);
+
     ffi::XkbFreeClientMap(desc, 0, ffi::True);
 
     Ok(key_map_vec)

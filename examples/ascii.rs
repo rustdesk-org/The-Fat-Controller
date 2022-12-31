@@ -15,10 +15,23 @@ lazy_static::lazy_static! {
 fn main() -> anyhow::Result<()> {
     let mut kbd = KBD_CONTEXT.lock().unwrap();
 
-    kbd.key_down(Key::Shift)?;
-    kbd.unicode_char_down('q')?;
-    kbd.unicode_char_up('q')?;
-    kbd.key_up(Key::Shift)?;
+    // let mut ctx: Mutex<Context> = Mutex::new(Context::new().unwrap());
+
+    // dbg!(ctx.key_map.get(&'A'));
+
+    // for c in b' '..=b'~' {
+    //     thread::sleep(delay);
+    //     ctx.unicode_char(c as char)?;
+    //     ctx.ascii_char(b' ')?;
+    //     ctx.ascii_char(c)?;
+    //     ctx.ascii_char(b'\n')?;
+    // }
+
+    KBD_CONTEXT.lock().unwrap().key_down(Key::Shift);
+    KBD_CONTEXT.lock().unwrap().unicode_char_down('1');
+    KBD_CONTEXT.lock().unwrap().unicode_char_up('1');
+    KBD_CONTEXT.lock().unwrap().key_up(Key::Shift);
+    
 
     // let c = 'b'; // â Q q ¡(shift+altgr) ^ \\
     // kbd.unicode_char(c as char)?;
