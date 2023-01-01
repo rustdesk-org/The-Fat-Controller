@@ -107,8 +107,8 @@ unsafe fn create_key_map(
     // key state identify a single keysym.
     // See https://tronche.com/gui/x/xlib/input/keyboard-encoding.html
 
+    use std::collections::hash_map::{Entry, HashMap};
     use std::ffi::c_uint;
-    use std::collections::hash_map::{HashMap, Entry};
 
     let desc = ffi::XkbGetMap(display, ffi::XkbAllClientInfoMask, ffi::XkbUseCoreKbd);
     if desc.is_null() {
@@ -138,8 +138,7 @@ unsafe fn create_key_map(
     let mut key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>> =
         Vec::with_capacity(num_groups.into());
     for _i in 0..num_groups.into() {
-        let key_map = HashMap::new();
-        key_map_vec.push(key_map);
+        key_map_vec.push(HashMap::new());
     }
 
     for keycode in min_keycode..=max_keycode {
@@ -147,7 +146,11 @@ unsafe fn create_key_map(
         // groups represents all keyboard layouts.
         for group in 0..groups {
             let key_map = if group < num_groups.into() {
-                key_map_vec.get_mut(group as usize).unwrap()
+                match key_map_vec.get_mut(group as usize) {
+                    Some(key_map) => key_map,
+                    // None is unreachable
+                    None => return Err(Error::Unknown),
+                }
             } else {
                 break;
             };
@@ -190,8 +193,6 @@ unsafe fn create_key_map(
             }
         }
     }
-
-    println!("REMOVE ME ======================== {:?}", &key_map_vec);
 
     ffi::XkbFreeClientMap(desc, 0, ffi::True);
 
