@@ -193,13 +193,7 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
         // unused keycode.
         // TODO: insert into the key_map
         if !info.default {
-            ffi::XChangeKeyboardMapping(
-                ctx.display,
-                ctx.unused_keycode as c_int,
-                1,
-                &info.keysym,
-                1,
-            );
+            return Err(crate::GenericError::UnsupportedUnicode(ch));
         }
 
         // let old_group = {
