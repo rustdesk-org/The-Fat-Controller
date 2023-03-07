@@ -1,9 +1,6 @@
 use super::{ffi, Context, Error, KeyInfo, PlatformError};
 use crate::{linux_common, Key};
-use std::{
-    os::raw::{c_int, c_uint},
-    time::Duration,
-};
+use std::{os::raw::c_uint, time::Duration};
 
 fn key_event(ctx: &Context, key: Key, down: bool) -> Result<(), Error> {
     unsafe {
@@ -233,7 +230,7 @@ impl crate::UnicodeKeyboardContext for Context {
         char_event(self, ch, true, true)
     }
 
-    fn unicode_string(&mut self, s: &str) -> Result<(), Error> {
+    fn unicode_string(&mut self, _s: &str) -> Result<(), Error> {
         // for ch in s.chars() {
         //     if info_from_char(self, ch).is_none() {
         //         return Err(Error::UnsupportedUnicode(ch));

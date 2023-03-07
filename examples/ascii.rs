@@ -1,9 +1,5 @@
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
-};
-use tfc::{traits::*, Context, Error, Key};
+use std::sync::Mutex;
+use tfc::{traits::*, Context, Key};
 
 // `unicode_char('s')` should always type an `s` no matter what the keyboard
 // layout is. `ascii_char(b's')` will press the key in the position of an `s` on

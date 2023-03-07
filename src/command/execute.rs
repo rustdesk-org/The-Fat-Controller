@@ -1,6 +1,5 @@
 use super::Command;
 use crate::{traits::*, GenericError};
-use std::{thread, time::Duration};
 
 impl Command {
     fn execute_core<C>(&self, ctx: &mut C) -> Result<bool, GenericError<C::PlatformError>>
