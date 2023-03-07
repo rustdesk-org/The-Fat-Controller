@@ -1,5 +1,5 @@
-use crate::GenericError;
 use super::FallibleContext;
+use crate::GenericError;
 
 /// A context that supports getting screen information.
 ///
@@ -8,7 +8,6 @@ use super::FallibleContext;
 /// This trait isn't implemented for the Linux-Wayland context. It is simply not
 /// possible to obtain this information under Wayland.
 pub trait ScreenContext: FallibleContext {
-
     /// Get the location of the cursor in pixels.
     ///
     /// The first tuple element is the horizontal coordinate with zero being the

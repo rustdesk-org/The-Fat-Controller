@@ -1,4 +1,8 @@
-use std::{iter::Iterator, marker::PhantomData, fmt::{Display, Debug}};
+use std::{
+    fmt::{Debug, Display},
+    iter::Iterator,
+    marker::PhantomData,
+};
 
 /// An iterator for the variants of an [`Enum`].
 ///
@@ -84,7 +88,8 @@ pub trait Enum: Copy + Clone + Eq + PartialEq + Display + Debug {
     /// Get an iterator over the variants of the enum.
     fn iter() -> EnumIterator<Self> {
         EnumIterator::<Self> {
-            index: 0, phantom: PhantomData
+            index: 0,
+            phantom: PhantomData,
         }
     }
 }

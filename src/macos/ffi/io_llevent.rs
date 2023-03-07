@@ -121,7 +121,7 @@ pub struct NXScrollWheelEventData {
     pub pointDeltaAxis1: i32,
     pub pointDeltaAxis2: i32,
     pub pointDeltaAxis3: i32,
-    reserved8: [i32; 4]
+    reserved8: [i32; 4],
 }
 
 // Synthesised
@@ -158,9 +158,7 @@ pub union NXEventData {
 
 impl Default for NXEventData {
     fn default() -> Self {
-        unsafe {
-            std::mem::zeroed()
-        }
+        unsafe { std::mem::zeroed() }
     }
 }
 

@@ -1,8 +1,8 @@
-use std::{thread, time, time::Duration};
+use super::{ffi, Context, Error, OPTION_BIT, SHIFT_BIT};
 use crate::Key;
-use unicode_segmentation::UnicodeSegmentation;
 use core_graphics::event::{CGEvent, CGEventTapLocation};
-use super::{ffi, Context, Error, SHIFT_BIT, OPTION_BIT};
+use std::{thread, time, time::Duration};
+use unicode_segmentation::UnicodeSegmentation;
 
 // The implementation of KeyboardContext is adapted from here:
 // https://github.com/ccMSC/ckb/blob/master/src/ckb-daemon/input_mac.c
@@ -23,19 +23,19 @@ enum GroupedKey {
 
 fn to_key_code(key: Key) -> GroupedKey {
     use ffi::*;
-    use Key::*;
     use GroupedKey::*;
+    use Key::*;
 
     match key {
         Key::CapsLock => GroupedKey::CapsLock,
         Shift => Modifier(kVK_Shift, NX_DEVICELSHIFTKEYMASK),
         Control => Modifier(kVK_Control, NX_DEVICELCTLKEYMASK),
         Alt => Modifier(kVK_Option, NX_DEVICELALTKEYMASK),
-        Meta  => Modifier(kVK_Command, NX_DEVICELCMDKEYMASK),
+        Meta => Modifier(kVK_Command, NX_DEVICELCMDKEYMASK),
         RightShift => Modifier(kVK_RightShift, NX_DEVICERSHIFTKEYMASK),
         RightControl => Modifier(kVK_RightControl, NX_DEVICERCTLKEYMASK),
         RightAlt => Modifier(kVK_RightOption, NX_DEVICERALTKEYMASK),
-        RightMeta  => Modifier(kVK_RightCommand, NX_DEVICERCMDKEYMASK),
+        RightMeta => Modifier(kVK_RightCommand, NX_DEVICERCMDKEYMASK),
         Fn => Modifier(kVK_Function, NX_SECONDARYFNMASK),
 
         ReturnOrEnter => Regular(kVK_Return),
@@ -138,7 +138,7 @@ fn to_key_code(key: Key) -> GroupedKey {
         F12 => Regular(kVK_F12),
 
         FastForward => Media(NX_KEYTYPE_FAST), // FAST and NEXT seem to be the same
-        Rewind => Media(NX_KEYTYPE_REWIND), // REWIND and PREVIOUS seem to be the same
+        Rewind => Media(NX_KEYTYPE_REWIND),    // REWIND and PREVIOUS seem to be the same
         PlayPause => Media(NX_KEYTYPE_PLAY),
         VolumeUp => Media(NX_KEYTYPE_SOUND_UP),
         VolumeDown => Media(NX_KEYTYPE_SOUND_DOWN),
@@ -160,10 +160,30 @@ fn update_modifiers(modifiers: &mut u32, left: u32, right: u32, both: u32) {
 }
 
 fn update_context_modifiers(ctx: &mut Context) {
-    update_modifiers(&mut ctx.modifiers, ffi::NX_DEVICELSHIFTKEYMASK, ffi::NX_DEVICERSHIFTKEYMASK, ffi::NX_SHIFTMASK);
-    update_modifiers(&mut ctx.modifiers, ffi::NX_DEVICELCTLKEYMASK, ffi::NX_DEVICERCTLKEYMASK, ffi::NX_CONTROLMASK);
-    update_modifiers(&mut ctx.modifiers, ffi::NX_DEVICELALTKEYMASK, ffi::NX_DEVICERALTKEYMASK, ffi::NX_ALTERNATEMASK);
-    update_modifiers(&mut ctx.modifiers, ffi::NX_DEVICELCMDKEYMASK, ffi::NX_DEVICERCMDKEYMASK, ffi::NX_COMMANDMASK);
+    update_modifiers(
+        &mut ctx.modifiers,
+        ffi::NX_DEVICELSHIFTKEYMASK,
+        ffi::NX_DEVICERSHIFTKEYMASK,
+        ffi::NX_SHIFTMASK,
+    );
+    update_modifiers(
+        &mut ctx.modifiers,
+        ffi::NX_DEVICELCTLKEYMASK,
+        ffi::NX_DEVICERCTLKEYMASK,
+        ffi::NX_CONTROLMASK,
+    );
+    update_modifiers(
+        &mut ctx.modifiers,
+        ffi::NX_DEVICELALTKEYMASK,
+        ffi::NX_DEVICERALTKEYMASK,
+        ffi::NX_ALTERNATEMASK,
+    );
+    update_modifiers(
+        &mut ctx.modifiers,
+        ffi::NX_DEVICELCMDKEYMASK,
+        ffi::NX_DEVICERCMDKEYMASK,
+        ffi::NX_COMMANDMASK,
+    );
 }
 
 fn flags_event(ctx: &Context, event: *const ffi::NXEventData) -> Result<(), Error> {
@@ -171,7 +191,7 @@ fn flags_event(ctx: &Context, event: *const ffi::NXEventData) -> Result<(), Erro
         ffi::NX_FLAGSCHANGED,
         event,
         ctx.modifiers,
-        ffi::kIOHIDSetGlobalEventFlags
+        ffi::kIOHIDSetGlobalEventFlags,
     )
 }
 
@@ -249,10 +269,22 @@ fn char_event(ctx: &mut Context, ch: char, down: bool, up: bool) -> Result<(), E
 
     if down {
         if info.modifiers & (1 << SHIFT_BIT) != 0 {
-            modifier_key_event(ctx, &mut event, ffi::kVK_Shift, ffi::NX_DEVICELSHIFTKEYMASK, true)?;
+            modifier_key_event(
+                ctx,
+                &mut event,
+                ffi::kVK_Shift,
+                ffi::NX_DEVICELSHIFTKEYMASK,
+                true,
+            )?;
         }
         if info.modifiers & (1 << OPTION_BIT) != 0 {
-            modifier_key_event(ctx, &mut event, ffi::kVK_Option, ffi::NX_DEVICELALTKEYMASK, true)?;
+            modifier_key_event(
+                ctx,
+                &mut event,
+                ffi::kVK_Option,
+                ffi::NX_DEVICELALTKEYMASK,
+                true,
+            )?;
         }
 
         event.key.keyCode = info.key_code as u16;
@@ -266,10 +298,22 @@ fn char_event(ctx: &mut Context, ch: char, down: bool, up: bool) -> Result<(), E
         thread::sleep(time::Duration::from_millis(20));
 
         if info.modifiers & (1 << OPTION_BIT) != 0 {
-            modifier_key_event(ctx, &mut event, ffi::kVK_Option, ffi::NX_DEVICELALTKEYMASK, false)?;
+            modifier_key_event(
+                ctx,
+                &mut event,
+                ffi::kVK_Option,
+                ffi::NX_DEVICELALTKEYMASK,
+                false,
+            )?;
         }
         if info.modifiers & (1 << SHIFT_BIT) != 0 {
-            modifier_key_event(ctx, &mut event, ffi::kVK_Shift, ffi::NX_DEVICELSHIFTKEYMASK, false)?;
+            modifier_key_event(
+                ctx,
+                &mut event,
+                ffi::kVK_Shift,
+                ffi::NX_DEVICELSHIFTKEYMASK,
+                false,
+            )?;
         }
     }
 
@@ -286,7 +330,7 @@ impl crate::UnicodeKeyboardContext for Context {
     }
 
     fn unicode_char(&mut self, ch: char) -> Result<(), Error> {
-        match char_event(self, ch, true, true){
+        match char_event(self, ch, true, true) {
             Ok(_) => Ok(()),
             Err(err) => {
                 self.unicode_string(&ch.to_string());

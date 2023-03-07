@@ -1,5 +1,5 @@
-use crate::{Key, GenericError, Enum};
 use super::{FallibleContext, KeyboardContext};
+use crate::{Enum, GenericError, Key};
 
 /// A context that supports layout-dependent ASCII keyboard events.
 ///
@@ -26,7 +26,6 @@ use super::{FallibleContext, KeyboardContext};
 /// | `0x1B` (escape)    | `Key::Escape`            |
 /// | `0x7F` (delete)    | `Key::DeleteOrBackspace` |
 pub trait AsciiKeyboardContext: FallibleContext {
-
     /// Generate a key press event (possibly including shift) for an ASCII
     /// character.
     ///
@@ -96,9 +95,7 @@ impl KeyShift {
 
     fn key(&self) -> Key {
         // Constructing from new or new_shift guarantees that this is safe.
-        unsafe {
-            std::mem::transmute(self.0 & 127)
-        }
+        unsafe { std::mem::transmute(self.0 & 127) }
     }
 
     fn from_ascii(ascii: u8) -> Self {
@@ -211,14 +208,14 @@ impl KeyShift {
             b'}' => Self::new_shift(RightBracket),
             b'~' => Self::new_shift(Grave),
             // Delete is handled above
-
             _ => Self::NONE,
         }
     }
 }
 
 fn apply<C>(ctx: &mut C, key_shift: KeyShift) -> Result<(), GenericError<C::PlatformError>>
-    where C: KeyboardContext + FallibleContext
+where
+    C: KeyboardContext + FallibleContext,
 {
     if key_shift.shift() {
         ctx.key_down(Key::Shift)?;

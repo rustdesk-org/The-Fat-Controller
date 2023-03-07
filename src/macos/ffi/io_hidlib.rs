@@ -13,7 +13,7 @@ pub const kIOHIDSetRelativeCursorPosition: IOOptionBits = 4;
 pub const kIOHIDPostHIDManagerEvent: IOOptionBits = 8;
 
 #[link(name = "IOKit", kind = "framework")]
-extern {
+extern "C" {
     #[allow(non_snake_case)]
     pub fn IOHIDPostEvent(
         connect: io_connect_t,
@@ -22,6 +22,6 @@ extern {
         eventData: *const NXEventData,
         eventDataVersion: u32,
         eventFlags: IOOptionBits,
-        options: IOOptionBits
+        options: IOOptionBits,
     ) -> kern_return_t;
 }

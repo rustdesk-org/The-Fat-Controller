@@ -24,7 +24,8 @@ impl crate::ScreenContext for super::Context {
                 &mut win_x_return,
                 &mut win_y_return,
                 &mut mask_return,
-            ) == ffi::False {
+            ) == ffi::False
+            {
                 Err(Error::Platform(PlatformError::XQueryPointer))
             } else {
                 Ok((win_x_return as i32, win_y_return as i32))

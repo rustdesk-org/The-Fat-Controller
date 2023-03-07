@@ -8,6 +8,6 @@ pub struct CFString(c_void);
 pub type CFStringRef = *const CFString;
 
 #[link(name = "CoreFoundation", kind = "framework")]
-extern {
+extern "C" {
     pub fn CFRelease(cf: *mut c_void);
 }

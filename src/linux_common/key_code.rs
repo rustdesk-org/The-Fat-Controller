@@ -1,9 +1,9 @@
 use crate::Key;
 
 pub fn to_key_code(key: Key) -> u16 {
-    use Key::*;
     use super::ffi::*;
 
+    use Key::*;
     match key {
         CapsLock => KEY_CAPSLOCK,
         Shift => KEY_LEFTSHIFT,
@@ -45,9 +45,9 @@ pub fn to_key_code(key: Key) -> u16 {
         End => KEY_END,
         Insert => KEY_INSERT,
         Print => KEY_PRINT,
-        PrintScreen => KEY_SYSRQ,   // TODO: ???
-        ScrollLock => KEY_SCROLLLOCK,// TODO
-        Pause => KEY_PAUSE,         // TODO
+        PrintScreen => KEY_SYSRQ,     // TODO: ???
+        ScrollLock => KEY_SCROLLLOCK, // TODO
+        Pause => KEY_PAUSE,           // TODO
         NumLock => KEY_NUMLOCK,
         A => KEY_A,
         B => KEY_B,

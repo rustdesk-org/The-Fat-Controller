@@ -41,7 +41,18 @@ impl crate::MouseContext for Context {
         unsafe {
             // XTestFakeRelativeMotionEvent seems to only move the mouse
             // vertically. Very odd.
-            if ffi::XWarpPointer(self.display, ffi::None, ffi::None, 0, 0, 0, 0, dx as c_int, dy as c_int) == 0 {
+            if ffi::XWarpPointer(
+                self.display,
+                ffi::None,
+                ffi::None,
+                0,
+                0,
+                0,
+                0,
+                dx as c_int,
+                dy as c_int,
+            ) == 0
+            {
                 return Err(Error::Platform(PlatformError::XWarpPointer));
             }
             ffi::XFlush(self.display);
@@ -53,7 +64,18 @@ impl crate::MouseContext for Context {
         unsafe {
             // XTestFakeMotionEvent apparently ignores the screen number.
             let window = ffi::XRootWindow(self.display, self.screen_number);
-            if ffi::XWarpPointer(self.display, ffi::None, window, 0, 0, 0, 0, x as c_int, y as c_int) == 0 {
+            if ffi::XWarpPointer(
+                self.display,
+                ffi::None,
+                window,
+                0,
+                0,
+                0,
+                0,
+                x as c_int,
+                y as c_int,
+            ) == 0
+            {
                 return Err(Error::Platform(PlatformError::XWarpPointer));
             }
             ffi::XFlush(self.display);

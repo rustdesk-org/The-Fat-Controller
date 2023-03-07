@@ -8,7 +8,7 @@ use std::ffi::{c_int, c_uint, c_ulong};
 pub const CurrentTime: c_ulong = 0;
 
 #[link(name = "Xtst")]
-extern {
+extern "C" {
     pub fn XTestQueryExtension(
         display: *mut Display,
         event_base: *mut c_int,
@@ -21,7 +21,7 @@ extern {
         display: *mut Display,
         keycode: c_uint,
         is_press: Bool,
-        delay: c_ulong
+        delay: c_ulong,
     ) -> c_int;
 
     pub fn XTestFakeButtonEvent(

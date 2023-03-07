@@ -35,11 +35,10 @@ fn main() -> Result<(), Error> {
     KBD_CONTEXT.lock().unwrap().unicode_char_down('q');
     KBD_CONTEXT.lock().unwrap().unicode_char_up('q');
     KBD_CONTEXT.lock().unwrap().key_up(Key::Shift);
-    
 
     // let c = 'b'; // â Q q ¡(shift+altgr) ^ \\
     // KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
-    
+
     // KBD_CONTEXT.lock().unwrap().unicode_char_down(c as char)?;
 
     // use std::{thread, time::Duration};

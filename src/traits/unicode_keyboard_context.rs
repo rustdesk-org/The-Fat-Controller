@@ -1,5 +1,5 @@
-use crate::GenericError;
 use super::FallibleContext;
+use crate::GenericError;
 
 /// A context that supports layout-independent Unicode keyboard events.
 ///
@@ -68,7 +68,6 @@ use super::FallibleContext;
 /// [`unicode_string`](UnicodeKeyboardContext::unicode_string) can handle any
 /// Unicode string.
 pub trait UnicodeKeyboardContext: FallibleContext {
-
     /// Generate a key press event (possibly including modifiers) for a Unicode
     /// character.
     ///

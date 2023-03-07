@@ -1,9 +1,9 @@
 mod xkb;
-mod xlib;
 mod xkbcommon;
+mod xlib;
 mod xtest;
 
 pub use xkb::*;
-pub use xlib::*;
 pub use xkbcommon::*;
+pub use xlib::*;
 pub use xtest::*;

@@ -1,6 +1,6 @@
 use super::Command;
+use crate::{CommandCode, Enum, Key, MouseButton};
 use std::fmt::{self, Display, Formatter};
-use crate::{CommandCode, Key, MouseButton, Enum};
 
 /// Error enum returned by [`Command::from_bytes`].
 #[derive(Debug)]
@@ -29,7 +29,9 @@ impl Display for CommandBytesError {
             InvalidMouseButton(byte) => write!(f, "Invalid mouse button byte ({})", byte),
             InvalidUnicodeScalar(ucs) => write!(f, "Invalid Unicode scalar ({:#010X})", ucs),
             InvalidUTF8 => write!(f, "Invalid UTF-8 string"),
-            BufferTooShort(len) => write!(f, "Expected buffer to be at least {} bytes in length", len),
+            BufferTooShort(len) => {
+                write!(f, "Expected buffer to be at least {} bytes in length", len)
+            }
         }
     }
 }
@@ -148,15 +150,24 @@ impl Command {
 
             CommandCode::MouseMoveRel => {
                 check_buffer_length(buf, 5)?;
-                Ok((Command::MouseMoveRel(parse_i32(buf[1], buf[2]), parse_i32(buf[3], buf[4])), 5))
+                Ok((
+                    Command::MouseMoveRel(parse_i32(buf[1], buf[2]), parse_i32(buf[3], buf[4])),
+                    5,
+                ))
             }
             CommandCode::MouseMoveAbs => {
                 check_buffer_length(buf, 5)?;
-                Ok((Command::MouseMoveAbs(parse_i32(buf[1], buf[2]), parse_i32(buf[3], buf[4])), 5))
+                Ok((
+                    Command::MouseMoveAbs(parse_i32(buf[1], buf[2]), parse_i32(buf[3], buf[4])),
+                    5,
+                ))
             }
             CommandCode::MouseScroll => {
                 check_buffer_length(buf, 5)?;
-                Ok((Command::MouseScroll(parse_i32(buf[1], buf[2]), parse_i32(buf[3], buf[4])), 5))
+                Ok((
+                    Command::MouseScroll(parse_i32(buf[1], buf[2]), parse_i32(buf[3], buf[4])),
+                    5,
+                ))
             }
             CommandCode::MouseDown => {
                 check_buffer_length(buf, 2)?;
@@ -192,15 +203,24 @@ impl Command {
 
             CommandCode::UnicodeCharDown => {
                 check_buffer_length(buf, 5)?;
-                Ok((Command::UnicodeCharDown(parse_char(buf[1], buf[2], buf[3], buf[4])?), 5))
+                Ok((
+                    Command::UnicodeCharDown(parse_char(buf[1], buf[2], buf[3], buf[4])?),
+                    5,
+                ))
             }
             CommandCode::UnicodeCharUp => {
                 check_buffer_length(buf, 5)?;
-                Ok((Command::UnicodeCharUp(parse_char(buf[1], buf[2], buf[3], buf[4])?), 5))
+                Ok((
+                    Command::UnicodeCharUp(parse_char(buf[1], buf[2], buf[3], buf[4])?),
+                    5,
+                ))
             }
             CommandCode::UnicodeChar => {
                 check_buffer_length(buf, 5)?;
-                Ok((Command::UnicodeChar(parse_char(buf[1], buf[2], buf[3], buf[4])?), 5))
+                Ok((
+                    Command::UnicodeChar(parse_char(buf[1], buf[2], buf[3], buf[4])?),
+                    5,
+                ))
             }
             CommandCode::UnicodeString => {
                 check_buffer_length(buf, 3)?;

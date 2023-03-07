@@ -1,5 +1,5 @@
-mod ffi;
 mod error;
+mod ffi;
 mod keyboard;
 mod mouse;
 mod screen;
@@ -42,7 +42,8 @@ fn connect_to_service(name: *const u8, connect_type: u32) -> Result<ffi::io_conn
         // dictionary. IOServiceGetMatchingServices will release the
         // dictionary.
         let mut iterator = ffi::IO_OBJECT_NULL;
-        let error_code = ffi::IOServiceGetMatchingServices(ffi::kIOMasterPortDefault, matching, &mut iterator);
+        let error_code =
+            ffi::IOServiceGetMatchingServices(ffi::kIOMasterPortDefault, matching, &mut iterator);
         if error_code != ffi::kIOReturnSuccess {
             return Err(Error::Platform(PlatformError::new(error_code)));
         }
@@ -61,7 +62,9 @@ fn connect_to_service(name: *const u8, connect_type: u32) -> Result<ffi::io_conn
             // Try to open a connection to the IOService. If successful,
             // we're done. We don't need a reference to the service after
             // opening a connection to it.
-            if ffi::IOServiceOpen(service, ffi::mach_task_self_, connect_type, &mut connect) == ffi::kIOReturnSuccess {
+            if ffi::IOServiceOpen(service, ffi::mach_task_self_, connect_type, &mut connect)
+                == ffi::kIOReturnSuccess
+            {
                 found = true;
                 ffi::IOObjectRelease(service);
                 break;
@@ -84,8 +87,8 @@ fn create_key_map() -> Result<std::collections::HashMap<char, KeyInfo>, Error> {
     // Iterate over all combinations of key codes and modifier states and
     // convert them to characters. Use this to create a mapping from characters
     // to key codes and modifier states.
+    use std::collections::hash_map::{Entry, HashMap};
     use std::ffi::c_void;
-    use std::collections::hash_map::{HashMap, Entry};
 
     const MAX_STRING_LENGTH: usize = 255;
 
@@ -96,9 +99,8 @@ fn create_key_map() -> Result<std::collections::HashMap<char, KeyInfo>, Error> {
         if input_source.is_null() {
             return Err(Error::Unknown);
         }
-        let layout_data = ffi::TISGetInputSourceProperty(
-            input_source, ffi::kTISPropertyUnicodeKeyLayoutData
-        );
+        let layout_data =
+            ffi::TISGetInputSourceProperty(input_source, ffi::kTISPropertyUnicodeKeyLayoutData);
         if layout_data.is_null() {
             ffi::CFRelease(input_source as *mut c_void);
             return Err(Error::Unknown);
@@ -147,8 +149,8 @@ fn create_key_map() -> Result<std::collections::HashMap<char, KeyInfo>, Error> {
             }
 
             let string_utf16 = &string[..length as usize];
-            let string_utf32 = std::char::decode_utf16(string_utf16.iter().cloned())
-                .collect::<Vec<_>>();
+            let string_utf32 =
+                std::char::decode_utf16(string_utf16.iter().cloned()).collect::<Vec<_>>();
 
             if string_utf32.len() == 1 {
                 if let Ok(ch) = string_utf32[0] {
@@ -171,10 +173,13 @@ fn create_key_map() -> Result<std::collections::HashMap<char, KeyInfo>, Error> {
     // line-feed when given kVK_Return. That's kinda weird. Maybe it's
     // because macOS used carriage-return as the newline character in the
     // ancient times?
-    key_map.insert('\n', KeyInfo {
-        key_code: ffi::kVK_Return,
-        modifiers: 0,
-    });
+    key_map.insert(
+        '\n',
+        KeyInfo {
+            key_code: ffi::kVK_Return,
+            modifiers: 0,
+        },
+    );
 
     Ok(key_map)
 }
@@ -190,7 +195,8 @@ impl Context {
             Err(()) => return Err(Error::Unknown),
         };
 
-        let hid_connect = connect_to_service(ffi::kIOHIDSystemClass.as_ptr(), ffi::kIOHIDParamConnectType)?;
+        let hid_connect =
+            connect_to_service(ffi::kIOHIDSystemClass.as_ptr(), ffi::kIOHIDParamConnectType)?;
 
         Ok(Self {
             hid_connect,
@@ -206,7 +212,7 @@ impl Context {
         event_type: u32,
         event: *const ffi::NXEventData,
         flags: ffi::IOOptionBits,
-        options: ffi::IOOptionBits
+        options: ffi::IOOptionBits,
     ) -> Result<(), Error> {
         let error_code = unsafe {
             ffi::IOHIDPostEvent(
@@ -216,7 +222,7 @@ impl Context {
                 event,
                 ffi::kNXEventDataVersion,
                 flags,
-                options
+                options,
             )
         };
         if error_code == ffi::kIOReturnSuccess {

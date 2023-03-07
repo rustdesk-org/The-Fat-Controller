@@ -67,9 +67,7 @@ pub const SIZEOF_INPUT: c_int = std::mem::size_of::<INPUT>() as c_int;
 
 impl Default for INPUT {
     fn default() -> Self {
-        unsafe {
-            std::mem::zeroed()
-        }
+        unsafe { std::mem::zeroed() }
     }
 }
 

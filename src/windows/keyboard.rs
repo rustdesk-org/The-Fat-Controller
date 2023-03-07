@@ -2,19 +2,27 @@
 
 use std::{convert::TryInto, ptr::null_mut};
 
-use winapi::{um::winuser::{INPUT_u, KEYBDINPUT, VkKeyScanA, VkKeyScanExW, GetKeyboardLayout, GetKeyboardLayoutList, ToUnicodeEx, GetKeyState, GetWindowThreadProcessId, GetForegroundWindow}, shared::minwindef::{HKL}};
+use winapi::{
+    shared::minwindef::HKL,
+    um::winuser::{
+        GetForegroundWindow, GetKeyState, GetKeyboardLayout, GetKeyboardLayoutList,
+        GetWindowThreadProcessId, INPUT_u, ToUnicodeEx, VkKeyScanA, VkKeyScanExW, KEYBDINPUT,
+    },
+};
 
+use super::{
+    ffi::{self, VkKeyScanW, DWORD, WORD},
+    Context, Error,
+};
 use crate::Key;
-use super::{ffi::{self, VkKeyScanW, DWORD, WORD}, Context, Error};
 
 static UNICODE: u16 = 0x0004;
 static KEYUP: u16 = 0x0002;
 static KEYDOWN: u16 = 0;
 
 fn to_key_code(key: Key) -> ffi::WORD {
-    use Key::*;
     use ffi::*;
-
+    use Key::*;
     match key {
         CapsLock => VK_CAPITAL,
         Shift => VK_LSHIFT,
@@ -160,48 +168,48 @@ impl crate::KeyboardContext for Context {
     }
 }
 
-fn is_dead(layout: HKL, vk: i32, scan: u16) -> bool{
+fn is_dead(layout: HKL, vk: i32, scan: u16) -> bool {
     const BUF_LEN: i32 = 32;
     let mut buff = [0_u16; BUF_LEN as usize];
     let buff_ptr = buff.as_mut_ptr();
     let mut state = [0; 256];
     let state_ptr = state.as_mut_ptr();
     let len = unsafe {
-        ToUnicodeEx(vk.try_into().unwrap_or_default(), scan.into(), state_ptr, buff_ptr, 8 - 1, 0, layout)
+        ToUnicodeEx(
+            vk.try_into().unwrap_or_default(),
+            scan.into(),
+            state_ptr,
+            buff_ptr,
+            8 - 1,
+            0,
+            layout,
+        )
     };
     len == -1
 }
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
     // send char
-    let is_caps = unsafe{
-        GetKeyState(ffi::VK_CAPITAL.into()) < 0
-    };
-    let is_shift = unsafe {
-        GetKeyState(ffi::VK_SHIFT.into()) < 0
-    };
-    let is_alt = unsafe{
-        GetKeyState(ffi::VK_MENU.into()) < 0
-    };
-    let is_control = unsafe{
-        GetKeyState(ffi::VK_CONTROL.into()) < 0
-    };
+    let is_caps = unsafe { GetKeyState(ffi::VK_CAPITAL.into()) < 0 };
+    let is_shift = unsafe { GetKeyState(ffi::VK_SHIFT.into()) < 0 };
+    let is_alt = unsafe { GetKeyState(ffi::VK_MENU.into()) < 0 };
+    let is_control = unsafe { GetKeyState(ffi::VK_CONTROL.into()) < 0 };
     // Keep modifers is 0
-    if is_caps && down{
+    if is_caps && down {
         send_vk(ctx, ffi::VK_CAPITAL.into(), 0, 0, true)?;
         send_vk(ctx, ffi::VK_CAPITAL.into(), 0, 0, false)?;
     }
-    if is_shift && down{
+    if is_shift && down {
         send_vk(ctx, ffi::VK_SHIFT.into(), 0, 0, false)?;
     }
-    if is_alt && down{
+    if is_alt && down {
         send_vk(ctx, ffi::VK_MENU.into(), 0, 0, false)?;
     }
     let mut ch = ch;
-    // Ctrl + Shift + F 
-    if is_shift && is_control && ch.is_uppercase() && down{
+    // Ctrl + Shift + F
+    if is_shift && is_control && ch.is_uppercase() && down {
         send_vk(ctx, ffi::VK_SHIFT.into(), 0, 0, true)?;
-        ch = ch.to_lowercase().collect::<Vec<_>>()[0] ;
+        ch = ch.to_lowercase().collect::<Vec<_>>()[0];
     }
     let layout = unsafe {
         let current_window_thread_id = GetWindowThreadProcessId(GetForegroundWindow(), null_mut());
@@ -212,9 +220,9 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     let (vk, scan, flags): (i32, u16, u16) = if (res >> 8) & 0xFF == 0 {
         let vk = (res & 0xFF) as i32;
         // Without dead key
-        if is_dead(layout, vk, 0){
-            (0, ch as _, UNICODE)}
-        else{
+        if is_dead(layout, vk, 0) {
+            (0, ch as _, UNICODE)
+        } else {
             (vk, 0, 0)
         }
     } else {
@@ -223,14 +231,14 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
 
     send_vk(ctx, vk, scan, flags, down)?;
     // Ctrl + Shift + F
-    if is_shift && is_control && ch.is_lowercase() && down{
+    if is_shift && is_control && ch.is_lowercase() && down {
         send_vk(ctx, vk, scan, flags, false)?;
     }
 
     Ok(())
 }
 
-fn send_vk(ctx: &Context, vk: i32, scan: u16, flags: u16, down: bool) -> Result<(), Error>{
+fn send_vk(ctx: &Context, vk: i32, scan: u16, flags: u16, down: bool) -> Result<(), Error> {
     let state_flags = if down { KEYDOWN } else { KEYUP };
     let flags: DWORD = (flags | state_flags).into();
     let vk: WORD = vk as _;
@@ -241,7 +249,7 @@ fn send_vk(ctx: &Context, vk: i32, scan: u16, flags: u16, down: bool) -> Result<
     input.u.ki.wVk = vk;
     input.u.ki.wScan = scan;
     input.u.ki.dwFlags = flags;
-    
+
     ctx.send_input(&input)?;
 
     Ok(())

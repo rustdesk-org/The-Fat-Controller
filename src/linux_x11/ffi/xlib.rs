@@ -43,7 +43,7 @@ unsafe impl Sync for XModifierKeymap {}
 unsafe impl Send for XModifierKeymap {}
 
 #[link(name = "X11")]
-extern {
+extern "C" {
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XOpenDisplay.3.html
     pub fn XOpenDisplay(display_name: *const u8) -> *mut Display;
 

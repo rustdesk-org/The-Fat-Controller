@@ -1,5 +1,5 @@
-mod ffi;
 mod error;
+mod ffi;
 mod keyboard;
 mod mouse;
 mod screen;

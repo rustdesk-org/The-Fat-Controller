@@ -1,6 +1,6 @@
 use super::ffi;
+use crate::{utils::NonZero, FallibleContext};
 use std::fmt::{self, Display, Formatter};
-use crate::{FallibleContext, utils::NonZero};
 
 type NonZeroDWORD = <ffi::DWORD as NonZero>::Type;
 
@@ -9,9 +9,7 @@ pub struct PlatformError(NonZeroDWORD);
 
 impl PlatformError {
     pub(super) fn last() -> Self {
-        unsafe {
-            Self(NonZeroDWORD::new_unchecked(ffi::GetLastError()))
-        }
+        unsafe { Self(NonZeroDWORD::new_unchecked(ffi::GetLastError())) }
     }
 }
 
@@ -29,7 +27,7 @@ impl Display for PlatformError {
                 0,
                 std::ptr::addr_of!(message_buffer) as *mut ffi::WCHAR,
                 0,
-                std::ptr::null_mut()
+                std::ptr::null_mut(),
             );
 
             if message_length == 0 {

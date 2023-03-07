@@ -1,6 +1,5 @@
-use std::ffi::c_void;
-use std::ffi::{c_int, c_uint, c_ushort};
-use super::{Bool, Atom, Display, KeyCode, KeySym};
+use super::{Atom, Bool, Display, KeyCode, KeySym};
+use std::ffi::{c_void, c_int, c_uint, c_ushort};
 
 // X11/extensions/XKB.h
 #[allow(non_upper_case_globals)]
@@ -56,9 +55,7 @@ const XkbKeySymsMask: c_uint = 1 << 1;
 const XkbModifierMapMask: c_uint = 1 << 2;
 
 #[allow(non_upper_case_globals)]
-pub const XkbAllClientInfoMask: c_uint = XkbKeyTypesMask |
-    XkbKeySymsMask |
-    XkbModifierMapMask;
+pub const XkbAllClientInfoMask: c_uint = XkbKeyTypesMask | XkbKeySymsMask | XkbModifierMapMask;
 
 #[allow(non_upper_case_globals)]
 pub const XkbUseCoreKbd: c_uint = 0x0100;
@@ -153,13 +150,9 @@ pub unsafe fn XkbKeyKeyType(xkb: XkbDescPtr, keycode: KeyCode, group: c_int) -> 
     XkbCMKeyType((*xkb).map, keycode, group)
 }
 
-extern {
+extern "C" {
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XkbGetMap.3.html
-    pub fn XkbGetMap(
-        display: *mut Display,
-        which: c_uint,
-        device_spec: c_uint,
-    ) -> XkbDescPtr;
+    pub fn XkbGetMap(display: *mut Display, which: c_uint, device_spec: c_uint) -> XkbDescPtr;
 
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XkbKeycodeToKeysym.3.html
     pub fn XkbKeycodeToKeysym(
@@ -170,11 +163,7 @@ extern {
     ) -> KeySym;
 
     // https://www.x.org/releases/current/doc/man/man3/XkbFreeClientMap.3.xhtml
-    pub fn XkbFreeClientMap(
-        xkb: XkbDescPtr,
-        which: c_uint,
-        free_all: Bool,
-    );
+    pub fn XkbFreeClientMap(xkb: XkbDescPtr, which: c_uint, free_all: Bool);
 
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XkbGetState.3.html
     pub fn XkbGetState(
@@ -184,9 +173,5 @@ extern {
     ) -> Bool;
 
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XkbLockGroup.3.html
-    pub fn XkbLockGroup(
-        display: *mut Display,
-        device_spec: c_uint,
-        group: c_uint,
-    ) -> Bool;
+    pub fn XkbLockGroup(display: *mut Display, device_spec: c_uint, group: c_uint) -> Bool;
 }

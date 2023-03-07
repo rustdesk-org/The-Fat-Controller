@@ -6,7 +6,7 @@ pub struct CFData(std::ffi::c_void);
 pub type CFDataRef = *const CFData;
 
 #[link(name = "CoreFoundation", kind = "framework")]
-extern {
+extern "C" {
     #[allow(non_snake_case)]
     pub fn CFDataGetBytePtr(theData: CFDataRef) -> *const u8;
 }

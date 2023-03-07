@@ -1,6 +1,6 @@
 use super::Error;
-use core_graphics::{display::CGDisplay, event::CGEvent};
 use super::MyCGEventSource;
+use core_graphics::{display::CGDisplay, event::CGEvent};
 
 impl crate::ScreenContext for super::Context {
     fn cursor_location(&self) -> Result<(i32, i32), Error> {

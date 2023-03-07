@@ -1,4 +1,4 @@
-use super::{Context, ffi};
+use super::{ffi, Context};
 use crate::FallibleContext;
 use std::fmt::{self, Display, Formatter};
 
@@ -61,9 +61,7 @@ pub enum PlatformError {
 
 impl PlatformError {
     pub fn new(error_code: ffi::kern_return_t) -> Self {
-        unsafe {
-            std::mem::transmute(error_code)
-        }
+        unsafe { std::mem::transmute(error_code) }
     }
 }
 

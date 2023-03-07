@@ -1,5 +1,5 @@
-use tfc::{Context, Error, traits::*};
 use std::{f64::consts::PI, thread, time::Duration};
+use tfc::{traits::*, Context, Error};
 
 fn main() -> Result<(), Error> {
     let radius = 100.0;

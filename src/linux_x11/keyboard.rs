@@ -1,6 +1,9 @@
-use crate::{Key, linux_common};
 use super::{ffi, Context, Error, KeyInfo, PlatformError};
-use std::{time::{Duration}, os::raw::{c_int, c_uint}};
+use crate::{linux_common, Key};
+use std::{
+    os::raw::{c_int, c_uint},
+    time::Duration,
+};
 
 fn key_event(ctx: &Context, key: Key, down: bool) -> Result<(), Error> {
     unsafe {
@@ -33,7 +36,8 @@ impl crate::KeyboardContext for Context {
 const KEY_DELAY: Duration = Duration::from_millis(25);
 
 fn info_from_char(ctx: &Context, group: u8, ch: char) -> Option<KeyInfo> {
-    let key_map: &std::collections::HashMap<char, KeyInfo> = ctx.key_map_vec.get(group as usize).unwrap();
+    let key_map: &std::collections::HashMap<char, KeyInfo> =
+        ctx.key_map_vec.get(group as usize).unwrap();
     if let Some(info) = key_map.get(&ch) {
         return Some(*info);
     }
@@ -53,11 +57,7 @@ fn info_from_char(ctx: &Context, group: u8, ch: char) -> Option<KeyInfo> {
         }
     }
 
-    let modifiers = if ch.is_uppercase() {
-        ffi::ShiftMask
-    } else {
-        0
-    };
+    let modifiers = if ch.is_uppercase() { ffi::ShiftMask } else { 0 };
 
     // This key is not on the default keyboard layout. This means that the
     // unused keycode will be remapped to this keysym.
@@ -84,11 +84,13 @@ unsafe fn modifier_event(ctx: &Context, modifiers: u8, press: ffi::Bool) -> Resu
             let index = (mod_index * key_per_mod + key_index) as usize;
             let mut keycode = *(*ctx.modifier_map).modifiermap.add(index);
             // Keycode of altgr is 108 in Rdev
-            if keycode == 92{
+            if keycode == 92 {
                 keycode = 108;
             }
             if keycode != 0 {
-                if ffi::XTestFakeKeyEvent(ctx.display, keycode as c_uint, press, ffi::CurrentTime) == 0 {
+                if ffi::XTestFakeKeyEvent(ctx.display, keycode as c_uint, press, ffi::CurrentTime)
+                    == 0
+                {
                     return Err(Error::Platform(PlatformError::XTestFakeKeyEvent));
                 }
                 ffi::XSync(ctx.display, ffi::False);
@@ -100,7 +102,7 @@ unsafe fn modifier_event(ctx: &Context, modifiers: u8, press: ffi::Bool) -> Resu
     Ok(())
 }
 
-unsafe fn get_current_modifiers(ctx: &Context) -> Result<u32, Error>  {
+unsafe fn get_current_modifiers(ctx: &Context) -> Result<u32, Error> {
     let screen = ffi::XScreenOfDisplay(ctx.display, ctx.screen_number);
     let window = ffi::XRootWindowOfScreen(screen);
     // Passing null pointers for the things we don't need results in a
@@ -122,7 +124,8 @@ unsafe fn get_current_modifiers(ctx: &Context) -> Result<u32, Error>  {
         &mut win_x_return,
         &mut win_y_return,
         &mut mask_return,
-    ) == ffi::False {
+    ) == ffi::False
+    {
         Err(Error::Platform(PlatformError::XQueryPointer))
     } else {
         Ok(mask_return)
@@ -136,11 +139,11 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
     // instead.
 
     // Remember the old group then switch to the new group.
-    
+
     // TODO
     // // TODO: Need to optimize to improve response speed.
     // let old_modifiers = get_current_modifiers(ctx).unwrap_or(0) as u8;
-    
+
     // let is_shift = old_modifiers & 1 == 1;   // ShiftMask
     // let is_capslock = old_modifiers & 2 == 2;   // LockMask
     // let is_altgr = old_modifiers & 128 == 128;  // Mod5Mask
@@ -178,7 +181,7 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
 }
 
 fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
-    let group = unsafe{
+    let group = unsafe {
         let mut state = std::mem::zeroed();
         ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
         state.group
@@ -201,7 +204,7 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
         //     ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
         //     state.group
         // };
-        
+
         // if info.group != old_group {
         //     ffi::XkbLockGroup(ctx.display, ffi::XkbUseCoreKbd, info.group as c_uint);
         // }

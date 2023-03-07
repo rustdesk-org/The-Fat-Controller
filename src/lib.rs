@@ -32,11 +32,11 @@ mod mouse_button;
 mod utils;
 
 pub use command::*;
-pub use r#enum::*;
 pub use command_code::*;
 pub use generic_error::*;
 pub use key::*;
 pub use mouse_button::*;
+pub use r#enum::*;
 
 /// A collection of traits that [`Context`] implements.
 pub mod traits;

@@ -4,7 +4,12 @@ use crate::{MouseButton, ScreenContext};
 // The implementation of MouseContext is adapted from here:
 // https://github.com/ccMSC/ckb/blob/master/src/ckb-daemon/input_mac.c
 
-fn button_event(ctx: &mut Context, event_type: u32, button_number: u8, down: bool) -> Result<(), Error> {
+fn button_event(
+    ctx: &mut Context,
+    event_type: u32,
+    button_number: u8,
+    down: bool,
+) -> Result<(), Error> {
     let mut event = ffi::NXEventData::default();
     event.compound.subType = ffi::NX_SUBTYPE_AUX_MOUSE_BUTTONS;
     unsafe {

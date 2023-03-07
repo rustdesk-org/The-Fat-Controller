@@ -1,10 +1,11 @@
 use super::Command;
+use crate::{traits::*, GenericError};
 use std::{thread, time::Duration};
-use crate::{GenericError, traits::*};
 
 impl Command {
     fn execute_core<C>(&self, ctx: &mut C) -> Result<bool, GenericError<C::PlatformError>>
-        where C: FallibleContext + KeyboardContext + MouseContext + AsciiKeyboardContext
+    where
+        C: FallibleContext + KeyboardContext + MouseContext + AsciiKeyboardContext,
     {
         use Command::*;
         match self {
@@ -21,7 +22,7 @@ impl Command {
             AsciiCharUp(ch) => ctx.ascii_char_up(*ch),
             AsciiChar(ch) => ctx.ascii_char(*ch),
             AsciiString(s) => ctx.ascii_string(s.as_slice()),
-            _ => return Ok(false)
+            _ => return Ok(false),
         }?;
         Ok(true)
     }

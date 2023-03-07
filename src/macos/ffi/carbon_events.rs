@@ -239,6 +239,6 @@ pub const kVK_DownArrow: u8 = 0x7D;
 pub const kVK_UpArrow: u8 = 0x7E;
 
 #[link(name = "Carbon", kind = "framework")]
-extern {
+extern "C" {
     pub fn LMGetKbdType() -> u8;
 }

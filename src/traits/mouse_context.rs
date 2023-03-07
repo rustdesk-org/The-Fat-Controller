@@ -1,5 +1,5 @@
 use super::FallibleContext;
-use crate::{MouseButton, GenericError};
+use crate::{GenericError, MouseButton};
 
 /// A context that supports mouse events.
 ///
@@ -10,7 +10,6 @@ use crate::{MouseButton, GenericError};
 /// magic number that seems to pop up in various places) before issuing a scroll
 /// event.
 pub trait MouseContext: FallibleContext {
-
     /// Move the mouse relative to its current location.
     ///
     /// # Arguments
@@ -19,7 +18,8 @@ pub trait MouseContext: FallibleContext {
     /// negative values move to the left.
     /// * `dy` - The vertical offset. Positive values move down and negative
     /// values move up.
-    fn mouse_move_rel(&mut self, dx: i32, dy: i32) -> Result<(), GenericError<Self::PlatformError>>;
+    fn mouse_move_rel(&mut self, dx: i32, dy: i32)
+        -> Result<(), GenericError<Self::PlatformError>>;
 
     /// Move the mouse to an absolute location.
     ///
@@ -50,7 +50,10 @@ pub trait MouseContext: FallibleContext {
     ///
     /// This is equivalent to calling [`mouse_down`](MouseContext::mouse_down)
     /// followed by [`mouse_up`](MouseContext::mouse_up).
-    fn mouse_click(&mut self, button: MouseButton) -> Result<(), GenericError<Self::PlatformError>> {
+    fn mouse_click(
+        &mut self,
+        button: MouseButton,
+    ) -> Result<(), GenericError<Self::PlatformError>> {
         self.mouse_down(button)?;
         self.mouse_up(button)
     }
