@@ -16,36 +16,18 @@ lazy_static::lazy_static! {
     static ref KBD_CONTEXT: Mutex<Context> = Mutex::new(Context::new().expect("error"));
 }
 
-fn main() -> Result<(), Error> {
-    let delay = Duration::from_millis(50);
+fn main() -> anyhow::Result<()> {
+    let mut kbd = KBD_CONTEXT.lock().unwrap();
 
-    // let mut ctx: Mutex<Context> = Mutex::new(Context::new().unwrap());
-
-    // dbg!(ctx.key_map.get(&'A'));
-
-    // for c in b' '..=b'~' {
-    //     thread::sleep(delay);
-    //     ctx.unicode_char(c as char)?;
-    //     ctx.ascii_char(b' ')?;
-    //     ctx.ascii_char(c)?;
-    //     ctx.ascii_char(b'\n')?;
-    // }
-
-    KBD_CONTEXT.lock().unwrap().key_down(Key::Shift);
-    KBD_CONTEXT.lock().unwrap().unicode_char_down('q');
-    KBD_CONTEXT.lock().unwrap().unicode_char_up('q');
-    KBD_CONTEXT.lock().unwrap().key_up(Key::Shift);
+    kbd.key_down(Key::Shift)?;
+    kbd.unicode_char_down('q')?;
+    kbd.unicode_char_up('q')?;
+    kbd.key_up(Key::Shift)?;
 
     // let c = 'b'; // â Q q ¡(shift+altgr) ^ \\
-    // KBD_CONTEXT.lock().unwrap().unicode_char(c as char)?;
-
-    // KBD_CONTEXT.lock().unwrap().unicode_char_down(c as char)?;
-
-    // use std::{thread, time::Duration};
-    // thread::sleep(Duration::from_millis(4000));
-
-    // KBD_CONTEXT.lock().unwrap().unicode_char_up(c as char)?;
-    // dbg!(KBD_CONTEXT.lock().unwrap().key_map.get(&c));
+    // kbd.unicode_char(c as char)?;
+    // kbd.unicode_char_down(c as char)?;
+    // kbd.unicode_char_up(c as char)?;
 
     Ok(())
 }
