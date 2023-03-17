@@ -7,7 +7,9 @@ mod screen;
 // The implementation of Context::new is adapted from here:
 // https://github.com/jordansissel/xdotool/blob/master/xdo.c
 
+use self::ffi::XKeycodeToKeysym;
 use error::PlatformError;
+use std::collections::HashMap;
 type Error = crate::GenericError<PlatformError>;
 
 #[derive(Copy, Clone, Debug)]
@@ -27,7 +29,9 @@ pub struct Context {
     screen_number: std::ffi::c_int,
     scroll: crate::linux_common::ScrollAccum,
     pub key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>>,
-    unused_keycode: ffi::KeyCode,
+    unused_keycodes: Vec<ffi::KeyCode>,
+    pub unused_index: u32,
+    remap_keysym: HashMap<u64, ffi::KeyCode>,
     modifier_map: *const ffi::XModifierKeymap,
 }
 
@@ -54,11 +58,12 @@ unsafe fn find_unused_key_code(
     display: *mut ffi::Display,
     min_keycode: ffi::KeyCode,
     max_keycode: ffi::KeyCode,
-) -> Result<ffi::KeyCode, Error> {
+) -> Result<Vec<ffi::KeyCode>, Error> {
     // Get the full mapping from keycodes to keysyms. There may be
     // multiple keysyms for each keycode depending on which modifiers
     // are pressed. We need this for finding an unused keycode, that is
     // a keycode without any associated keysyms.
+    let mut unused_keycodes = vec![];
     let keycode_count = (max_keycode - min_keycode) + 1;
     let mut keysyms_per_keycode = 0;
     let keysyms = ffi::XGetKeyboardMapping(
@@ -79,13 +84,12 @@ unsafe fn find_unused_key_code(
         let sym_idx = code_idx as usize * keysyms_per_keycode;
         let slice = std::slice::from_raw_parts(keysyms.add(sym_idx), keysyms_per_keycode);
         if slice.iter().all(|keysym| *keysym == ffi::NoSymbol) {
-            ffi::XFree(keysyms);
-            return Ok(code_idx + min_keycode);
+            unused_keycodes.push(min_keycode + code_idx);
         }
     }
-
     ffi::XFree(keysyms);
-    Err(Error::Platform(PlatformError::NoUnusedKeyCode))
+
+    Ok(unused_keycodes)
 }
 
 unsafe fn create_key_map(
@@ -133,8 +137,7 @@ unsafe fn create_key_map(
         }
         num_groups += 1;
     }
-    // to-do: Ensure the comment out the following line is ok.
-    // num_groups = num_groups - 1;
+    num_groups -= 1;
     ////////////////////////////////////////////////////////////////
     let mut key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>> =
         Vec::with_capacity(num_groups.into());
@@ -221,7 +224,7 @@ impl Context {
             let min_keycode = min_keycode as ffi::KeyCode;
             let max_keycode = max_keycode as ffi::KeyCode;
 
-            let unused_keycode = match find_unused_key_code(display, min_keycode, max_keycode) {
+            let unused_keycodes = match find_unused_key_code(display, min_keycode, max_keycode) {
                 Ok(k) => k,
                 Err(e) => {
                     ffi::XCloseDisplay(display);
@@ -248,9 +251,44 @@ impl Context {
                 screen_number: ffi::XDefaultScreen(display),
                 scroll: Default::default(),
                 key_map_vec,
-                unused_keycode,
+                unused_keycodes,
+                unused_index: Default::default(),
+                remap_keysym: Default::default(),
                 modifier_map,
             })
+        }
+    }
+
+    pub fn get_unused_keycode(&mut self) -> ffi::KeyCode {
+        if !self.unused_keycodes.is_empty() {
+            let index = self.unused_index as usize;
+            self.unused_index = (self.unused_index + 1) % self.unused_keycodes.len() as u32;
+
+            self.unused_keycodes[index]
+        } else {
+            8
+        }
+    }
+
+    pub fn remapping(&mut self, keysym: u64, keycode: ffi::KeyCode) {
+        self.remap_keysym.insert(keysym, keycode);
+    }
+
+    /// Check remapping keycode is valid
+    pub fn is_valid_remapping(&self, keysym: u64, keycode: ffi::KeyCode) -> bool {
+        let res = unsafe { XKeycodeToKeysym(self.display, keycode, 0) };
+        res == keysym
+    }
+
+    pub fn get_remapped_keycode(&self, keysym: u64) -> Option<ffi::KeyCode> {
+        if let Some(keycode) = self.remap_keysym.get(&keysym).copied() {
+            if self.is_valid_remapping(keysym, keycode) {
+                Some(keycode)
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 }
@@ -258,15 +296,15 @@ impl Context {
 impl Drop for Context {
     fn drop(&mut self) {
         unsafe {
-            ffi::XChangeKeyboardMapping(
-                self.display,
-                self.unused_keycode as std::ffi::c_int,
-                1,
-                &0,
-                1,
-            );
             ffi::XFreeModifiermap(self.modifier_map);
             ffi::XCloseDisplay(self.display);
         }
     }
+}
+
+#[test]
+fn test_unused_keycode() -> Result<(), Error> {
+    let context = Context::new()?;
+    dbg!(&context.unused_keycodes);
+    Ok(())
 }

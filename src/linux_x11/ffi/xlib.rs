@@ -133,6 +133,8 @@ extern "C" {
         num_codes: c_int,
     );
 
+    pub fn XKeycodeToKeysym(display: *mut Display, keycode: KeyCode, index: c_int) -> KeySym;
+
     // https://www.x.org/releases/X11R6.8.0/doc/XFreeModifierMap.3.html
     pub fn XFreeModifiermap(modmap: *const XModifierKeymap);
 }
