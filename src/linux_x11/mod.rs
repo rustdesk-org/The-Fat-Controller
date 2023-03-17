@@ -137,7 +137,8 @@ unsafe fn create_key_map(
         }
         num_groups += 1;
     }
-    num_groups -= 1;
+    // to-do: Ensure the comment out the following line is ok.
+    // num_groups = num_groups - 1;
     ////////////////////////////////////////////////////////////////
     let mut key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>> =
         Vec::with_capacity(num_groups.into());
