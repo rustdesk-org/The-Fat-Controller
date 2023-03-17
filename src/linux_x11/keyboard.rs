@@ -1,6 +1,6 @@
 use super::{ffi, Context, Error, KeyInfo, PlatformError};
 use crate::{linux_common, Key};
-use std::{os::raw::c_uint, time::Duration};
+use std::{ffi::c_int, os::raw::c_uint, time::Duration};
 
 fn key_event(ctx: &Context, key: Key, down: bool) -> Result<(), Error> {
     unsafe {
@@ -32,7 +32,7 @@ impl crate::KeyboardContext for Context {
 // delay only at the point where the layout changes doesn't work.
 const KEY_DELAY: Duration = Duration::from_millis(25);
 
-fn info_from_char(ctx: &Context, group: u8, ch: char) -> Option<KeyInfo> {
+fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
     let key_map: &std::collections::HashMap<char, KeyInfo> = ctx.key_map_vec.get(group as usize)?;
     if let Some(info) = key_map.get(&ch) {
         return Some(*info);
@@ -53,17 +53,30 @@ fn info_from_char(ctx: &Context, group: u8, ch: char) -> Option<KeyInfo> {
         }
     }
 
-    let modifiers = if ch.is_uppercase() { ffi::ShiftMask } else { 0 };
+    if let Some(keycode) = ctx.get_remapped_keycode(keysym) {
+        Some(KeyInfo {
+            keysym,
+            group: 0,
+            modifiers: 0,
+            // keycode: ctx.unused_keycodes,
+            keycode,
+            default: true,
+        })
+    } else {
+        let keycode = ctx.get_unused_keycode();
+        ctx.remapping(keysym, keycode);
 
-    // This key is not on the default keyboard layout. This means that the
-    // unused keycode will be remapped to this keysym.
-    Some(KeyInfo {
-        keysym,
-        group: 0,
-        modifiers,
-        keycode: ctx.unused_keycode,
-        default: false,
-    })
+        // This key is not on the default keyboard layout. This means that the
+        // unused keycode will be remapped to this keysym.
+        Some(KeyInfo {
+            keysym,
+            group: 0,
+            modifiers: 0,
+            // keycode: ctx.unused_keycodes,
+            keycode,
+            default: false,
+        })
+    }
 }
 
 unsafe fn modifier_event(ctx: &Context, modifiers: u8, press: ffi::Bool) -> Result<(), Error> {
@@ -176,7 +189,7 @@ unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Resu
     Ok(())
 }
 
-fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
+fn char_event(ctx: &mut Context, ch: char, down: bool, up: bool) -> Result<(), Error> {
     let group = unsafe {
         let mut state = std::mem::zeroed();
         ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
@@ -190,9 +203,8 @@ fn char_event(ctx: &Context, ch: char, down: bool, up: bool) -> Result<(), Error
     unsafe {
         // If a keysym is not on the default keyboard mapping, we remap the
         // unused keycode.
-        // TODO: insert into the key_map
         if !info.default {
-            return Err(crate::GenericError::UnsupportedUnicode(ch));
+            ffi::XChangeKeyboardMapping(ctx.display, info.keycode as c_int, 1, &info.keysym, 1);
         }
 
         // let old_group = {
