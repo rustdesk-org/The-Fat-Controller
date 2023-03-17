@@ -9,7 +9,7 @@ mod screen;
 
 use self::ffi::XKeycodeToKeysym;
 use error::PlatformError;
-use std::collections::HashMap;
+use std::{collections::HashMap, ffi::c_int};
 type Error = crate::GenericError<PlatformError>;
 
 #[derive(Copy, Clone, Debug)]
@@ -30,7 +30,7 @@ pub struct Context {
     scroll: crate::linux_common::ScrollAccum,
     pub key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>>,
     unused_keycodes: Vec<ffi::KeyCode>,
-    pub unused_index: u32,
+    unused_index: u32,
     remap_keysym: HashMap<u64, ffi::KeyCode>,
     modifier_map: *const ffi::XModifierKeymap,
 }
@@ -260,19 +260,33 @@ impl Context {
         }
     }
 
-    pub fn get_unused_keycode(&mut self) -> ffi::KeyCode {
+    pub fn get_unused_keycode(&mut self) -> Option<ffi::KeyCode> {
         if !self.unused_keycodes.is_empty() {
             let index = self.unused_index as usize;
             self.unused_index = (self.unused_index + 1) % self.unused_keycodes.len() as u32;
 
-            self.unused_keycodes[index]
+            Some(self.unused_keycodes[index])
         } else {
-            8
+            None
         }
     }
 
-    pub fn remapping(&mut self, keysym: u64, keycode: ffi::KeyCode) {
-        self.remap_keysym.insert(keysym, keycode);
+    pub fn remapping(&mut self, keysym: u64) -> Result<ffi::KeyCode, Error> {
+        let keycode = if let Some(keycode) = self.get_unused_keycode(){
+            keycode
+        }else{
+            return Err(Error::Info("Not found unused keycode".into()));
+        };
+
+        unsafe {
+            ffi::XChangeKeyboardMapping(self.display, keycode as c_int, 1, keysym as _, 1);
+        }
+        if self.is_valid_remapping(keysym, keycode) {
+            self.remap_keysym.insert(keysym, keycode);
+            Ok(keycode)
+        } else {
+            Err(Error::Info("Failed to remap keycode".into()))
+        }
     }
 
     /// Check remapping keycode is valid
@@ -283,6 +297,7 @@ impl Context {
 
     pub fn get_remapped_keycode(&self, keysym: u64) -> Option<ffi::KeyCode> {
         if let Some(keycode) = self.remap_keysym.get(&keysym).copied() {
+            // FIXME: Detect switch input method.
             if self.is_valid_remapping(keysym, keycode) {
                 Some(keycode)
             } else {
@@ -297,6 +312,7 @@ impl Context {
 impl Drop for Context {
     fn drop(&mut self) {
         unsafe {
+            // FIXME: Clear remapped keycodes.
             ffi::XFreeModifiermap(self.modifier_map);
             ffi::XCloseDisplay(self.display);
         }

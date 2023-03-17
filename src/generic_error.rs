@@ -27,6 +27,7 @@ pub enum GenericError<P: std::error::Error> {
     /// code but still indicates failure in some way. For example, if a function
     /// returns a null pointer when a non-null pointer was expected, this
     /// `Unknown` error will be returned.
+    Info(String),
     Unknown,
 }
 
@@ -38,6 +39,7 @@ impl<P: std::error::Error> Display for GenericError<P> {
             UnsupportedAscii(ch) => write!(f, "Unsupported ASCII character ({:#04X})", ch),
             UnsupportedUnicode(ch) => write!(f, "Unsupported Unicode character ('{}')", ch),
             Unknown => write!(f, "Unknown error"),
+            Info(s) => write!(f, "{}", s),
         }
     }
 }

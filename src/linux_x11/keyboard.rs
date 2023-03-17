@@ -63,19 +63,20 @@ fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
             default: true,
         })
     } else {
-        let keycode = ctx.get_unused_keycode();
-        ctx.remapping(keysym, keycode);
-
         // This key is not on the default keyboard layout. This means that the
         // unused keycode will be remapped to this keysym.
-        Some(KeyInfo {
-            keysym,
-            group: 0,
-            modifiers: 0,
-            // keycode: ctx.unused_keycodes,
-            keycode,
-            default: false,
-        })
+        if let Ok(keycode) = ctx.remapping(keysym) {
+            Some(KeyInfo {
+                keysym,
+                group: 0,
+                modifiers: 0,
+                // keycode: ctx.unused_keycodes,
+                keycode,
+                default: false,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -201,12 +202,6 @@ fn char_event(ctx: &mut Context, ch: char, down: bool, up: bool) -> Result<(), E
     };
 
     unsafe {
-        // If a keysym is not on the default keyboard mapping, we remap the
-        // unused keycode.
-        if !info.default {
-            ffi::XChangeKeyboardMapping(ctx.display, info.keycode as c_int, 1, &info.keysym, 1);
-        }
-
         // let old_group = {
         //     let mut state = std::mem::zeroed();
         //     ffi::XkbGetState(ctx.display, ffi::XkbUseCoreKbd, &mut state);
