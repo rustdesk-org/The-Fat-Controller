@@ -129,14 +129,7 @@ unsafe fn create_key_map(
     (*keyboard).dpy = ndisplay;
     xlib::XkbGetNames(ndisplay, XKB_ALL_NAMES_MASK, keyboard);
     xlib::XkbGetControls(ndisplay, XKB_ALL_CTRLS_MASK, keyboard);
-    let mut num_groups: u8 = 0;
-    let group_source = (*(*keyboard).names).groups;
-    for group in group_source.iter() {
-        if *group == 0 {
-            break;
-        }
-        num_groups += 1;
-    }
+    let num_groups: u8 = (*(*keyboard).names).groups.len() as u8;
     // to-do: Ensure the comment out the following line is ok.
     // num_groups = num_groups - 1;
     ////////////////////////////////////////////////////////////////
@@ -147,9 +140,7 @@ unsafe fn create_key_map(
     }
 
     for keycode in min_keycode..=max_keycode {
-        let groups = ffi::XkbKeyNumGroups(desc, keycode);
-        // groups represents all keyboard layouts.
-        for group in 0..groups {
+        for group in 0..(num_groups as i32) {
             let key_map = if group < num_groups.into() {
                 match key_map_vec.get_mut(group as usize) {
                     Some(key_map) => key_map,
@@ -272,21 +263,18 @@ impl Context {
     }
 
     pub fn remapping(&mut self, keysym: u64) -> Result<ffi::KeyCode, Error> {
-        let keycode = if let Some(keycode) = self.get_unused_keycode(){
+        let keycode = if let Some(keycode) = self.get_unused_keycode() {
             keycode
-        }else{
+        } else {
             return Err(Error::Info("Not found unused keycode".into()));
         };
 
         unsafe {
-            ffi::XChangeKeyboardMapping(self.display, keycode as c_int, 1, keysym as _, 1);
+            ffi::XChangeKeyboardMapping(self.display, keycode as c_int, 1, &keysym, 1);
         }
-        if self.is_valid_remapping(keysym, keycode) {
-            self.remap_keysym.insert(keysym, keycode);
-            Ok(keycode)
-        } else {
-            Err(Error::Info("Failed to remap keycode".into()))
-        }
+        // Can't check immediately after remapping.
+        self.remap_keysym.insert(keysym, keycode);
+        Ok(keycode)
     }
 
     /// Check remapping keycode is valid
