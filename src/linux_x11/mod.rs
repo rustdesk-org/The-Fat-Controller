@@ -306,6 +306,7 @@ impl Context {
             .iter()
             .for_each(|(_, keycode)| change_keyboard_mapping(self.display, *keycode, NoSymbol));
         self.remap_keysym.clear();
+        self.unused_index = 0;
     }
 }
 
