@@ -7,7 +7,9 @@ mod screen;
 // The implementation of Context::new is adapted from here:
 // https://github.com/jordansissel/xdotool/blob/master/xdo.c
 
-use self::ffi::XKeycodeToKeysym;
+use crate::linux_x11::ffi::NoSymbol;
+
+use self::ffi::{Display, XKeycodeToKeysym};
 use error::PlatformError;
 use std::{collections::HashMap, ffi::c_int};
 type Error = crate::GenericError<PlatformError>;
@@ -33,6 +35,7 @@ pub struct Context {
     unused_index: u32,
     remap_keysym: HashMap<u64, ffi::KeyCode>,
     modifier_map: *const ffi::XModifierKeymap,
+    last_group: u8,
 }
 
 unsafe impl Sync for Context {}
@@ -247,6 +250,7 @@ impl Context {
                 unused_index: Default::default(),
                 remap_keysym: Default::default(),
                 modifier_map,
+                last_group: 0,
             })
         }
     }
@@ -269,12 +273,13 @@ impl Context {
             return Err(Error::Info("Not found unused keycode".into()));
         };
 
-        unsafe {
-            ffi::XChangeKeyboardMapping(self.display, keycode as c_int, 1, &keysym, 1);
+        change_keyboard_mapping(self.display, keycode, keysym);
+        if self.is_valid_remapping(keysym, keycode) {
+            self.remap_keysym.insert(keysym, keycode);
+            Ok(keycode)
+        } else {
+            Err(Error::Info("Failed to remap keycode".into()))
         }
-        // Can't check immediately after remapping.
-        self.remap_keysym.insert(keysym, keycode);
-        Ok(keycode)
     }
 
     /// Check remapping keycode is valid
@@ -295,12 +300,27 @@ impl Context {
             None
         }
     }
+
+    pub fn recover_remapped_keycodes(&mut self) {
+        self.remap_keysym
+            .iter()
+            .for_each(|(_, keycode)| change_keyboard_mapping(self.display, *keycode, NoSymbol));
+        self.remap_keysym.clear();
+    }
+}
+
+#[inline]
+fn change_keyboard_mapping(display: *mut Display, keycode: u8, keysym: u64) {
+    unsafe {
+        ffi::XChangeKeyboardMapping(display, keycode as c_int, 1, &keysym, 1);
+        ffi::XSync(display, ffi::False);
+    }
 }
 
 impl Drop for Context {
     fn drop(&mut self) {
         unsafe {
-            // FIXME: Clear remapped keycodes.
+            self.recover_remapped_keycodes();
             ffi::XFreeModifiermap(self.modifier_map);
             ffi::XCloseDisplay(self.display);
         }

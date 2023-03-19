@@ -38,6 +38,11 @@ fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
         return Some(*info);
     }
 
+    if ctx.last_group != group{
+        ctx.recover_remapped_keycodes();
+        ctx.last_group = group;
+    }
+
     let keysym = if ch as u32 >= 0x100 {
         ch as ffi::KeySym + 0x01000000
     } else {
