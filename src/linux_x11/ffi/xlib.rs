@@ -124,6 +124,9 @@ extern "C" {
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XKeysymToString.3.html
     pub fn XKeysymToString(keysym: KeySym) -> *const u8;
 
+    // https://www.x.org/releases/X11R7.5/doc/man/man3/XKeysymToKeycode.3.html
+    pub fn XKeysymToKeycode(display: *mut Display, keysym: KeySym) -> KeyCode;
+
     // https://www.x.org/releases/X11R7.5/doc/man/man3/XChangeKeyboardMapping.3.html
     pub fn XChangeKeyboardMapping(
         display: *mut Display,

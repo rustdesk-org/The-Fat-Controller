@@ -1,4 +1,7 @@
-use super::{ffi, Context, Error, KeyInfo, PlatformError};
+use super::{
+    ffi::{self, XKeysymToKeycode},
+    Context, Error, KeyInfo, PlatformError,
+};
 use crate::{linux_common, Key};
 use std::{ffi::c_int, os::raw::c_uint, time::Duration};
 
@@ -38,7 +41,7 @@ fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
         return Some(*info);
     }
 
-    if ctx.last_group != group{
+    if ctx.last_group != group {
         ctx.recover_remapped_keycodes();
         ctx.last_group = group;
     }
@@ -56,6 +59,18 @@ fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
         if ffi::XKeysymToString(keysym).is_null() {
             return None;
         }
+    }
+
+    let keycode = unsafe { XKeysymToKeycode(ctx.display, keysym) };
+    if keycode != 0 {
+        return Some(KeyInfo {
+            keysym,
+            group: 0,
+            modifiers: 0,
+            // keycode: ctx.unused_keycodes,
+            keycode,
+            default: true,
+        });
     }
 
     if let Some(keycode) = ctx.get_remapped_keycode(keysym) {
