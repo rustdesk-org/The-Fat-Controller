@@ -3,7 +3,7 @@ use super::{
     Context, Error, KeyInfo, PlatformError,
 };
 use crate::{linux_common, Key};
-use std::{ffi::c_int, os::raw::c_uint, time::Duration};
+use std::{os::raw::c_uint, time::Duration};
 
 fn key_event(ctx: &Context, key: Key, down: bool) -> Result<(), Error> {
     unsafe {
@@ -61,18 +61,6 @@ fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
         }
     }
 
-    let keycode = unsafe { XKeysymToKeycode(ctx.display, keysym) };
-    if keycode != 0 {
-        return Some(KeyInfo {
-            keysym,
-            group: 0,
-            modifiers: 0,
-            // keycode: ctx.unused_keycodes,
-            keycode,
-            default: true,
-        });
-    }
-
     if let Some(keycode) = ctx.get_remapped_keycode(keysym) {
         Some(KeyInfo {
             keysym,
@@ -83,9 +71,28 @@ fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
             default: true,
         })
     } else {
-        // This key is not on the default keyboard layout. This means that the
-        // unused keycode will be remapped to this keysym.
-        if let Ok(keycode) = ctx.remapping(keysym) {
+        let keycode = unsafe {
+            let keycode = XKeysymToKeycode(ctx.display, keysym);
+            // simulate ä will get : in ja, check if the keycode is correct.
+            let new_keysym = ffi::XkbKeycodeToKeysym(ctx.display, keycode, group as c_uint, 0);
+            if keysym == new_keysym {
+                keycode
+            } else {
+                0
+            }
+        };
+        if keycode != 0 {
+            Some(KeyInfo {
+                keysym,
+                group: 0,
+                modifiers: 0,
+                // keycode: ctx.unused_keycodes,
+                keycode,
+                default: true,
+            })
+        } else if let Ok(keycode) = ctx.remapping(keysym) {
+            // This key is not on the default keyboard layout. This means that the
+            // unused keycode will be remapped to this keysym.
             Some(KeyInfo {
                 keysym,
                 group: 0,
