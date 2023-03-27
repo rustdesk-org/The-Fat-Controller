@@ -266,7 +266,7 @@ impl Context {
         }
     }
 
-    pub fn remapping(&mut self, keysym: u64) -> Result<ffi::KeyCode, Error> {
+    pub fn remapping(&mut self, keysym: ffi::KeySym) -> Result<ffi::KeyCode, Error> {
         let keycode = if let Some(keycode) = self.get_unused_keycode() {
             keycode
         } else {
@@ -283,12 +283,12 @@ impl Context {
     }
 
     /// Check remapping keycode is valid
-    pub fn is_valid_remapping(&self, keysym: u64, keycode: ffi::KeyCode) -> bool {
+    pub fn is_valid_remapping(&self, keysym: ffi::KeySym, keycode: ffi::KeyCode) -> bool {
         let res = unsafe { XKeycodeToKeysym(self.display, keycode, 0) };
         res == keysym
     }
 
-    pub fn get_remapped_keycode(&self, keysym: u64) -> Option<ffi::KeyCode> {
+    pub fn get_remapped_keycode(&self, keysym: ffi::KeySym) -> Option<ffi::KeyCode> {
         if let Some(keycode) = self.remap_keysym.get(&keysym).copied() {
             // FIXME: Detect switch input method.
             if self.is_valid_remapping(keysym, keycode) {
@@ -311,7 +311,7 @@ impl Context {
 }
 
 #[inline]
-fn change_keyboard_mapping(display: *mut Display, keycode: u8, keysym: u64) {
+fn change_keyboard_mapping(display: *mut Display, keycode: u8, keysym: ffi::KeySym) {
     unsafe {
         ffi::XChangeKeyboardMapping(display, keycode as c_int, 1, &keysym, 1);
         ffi::XSync(display, ffi::False);

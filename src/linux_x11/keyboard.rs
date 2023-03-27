@@ -3,7 +3,7 @@ use super::{
     Context, Error, KeyInfo, PlatformError,
 };
 use crate::{linux_common, Key};
-use std::{os::raw::c_uint, time::Duration};
+use std::{os::raw::c_uint};
 
 fn key_event(ctx: &Context, key: Key, down: bool) -> Result<(), Error> {
     unsafe {
@@ -33,7 +33,7 @@ impl crate::KeyboardContext for Context {
 // TODO: Maybe make this configurable
 // The delay is only necessary if the layout is changed. However, inserting a
 // delay only at the point where the layout changes doesn't work.
-const KEY_DELAY: Duration = Duration::from_millis(25);
+// const KEY_DELAY: Duration = Duration::from_millis(25);
 
 fn info_from_char(ctx: &mut Context, group: u8, ch: char) -> Option<KeyInfo> {
     let key_map: &std::collections::HashMap<char, KeyInfo> = ctx.key_map_vec.get(group as usize)?;
@@ -139,35 +139,35 @@ unsafe fn modifier_event(ctx: &Context, modifiers: u8, press: ffi::Bool) -> Resu
     Ok(())
 }
 
-unsafe fn get_current_modifiers(ctx: &Context) -> Result<u32, Error> {
-    let screen = ffi::XScreenOfDisplay(ctx.display, ctx.screen_number);
-    let window = ffi::XRootWindowOfScreen(screen);
-    // Passing null pointers for the things we don't need results in a
-    // segfault.
-    let mut root_return = ffi::None;
-    let mut child_return = ffi::None;
-    let mut root_x_return = 0;
-    let mut root_y_return = 0;
-    let mut win_x_return = 0;
-    let mut win_y_return = 0;
-    let mut mask_return = 0;
-    if ffi::XQueryPointer(
-        ctx.display,
-        window,
-        &mut root_return,
-        &mut child_return,
-        &mut root_x_return,
-        &mut root_y_return,
-        &mut win_x_return,
-        &mut win_y_return,
-        &mut mask_return,
-    ) == ffi::False
-    {
-        Err(Error::Platform(PlatformError::XQueryPointer))
-    } else {
-        Ok(mask_return)
-    }
-}
+// unsafe fn get_current_modifiers(ctx: &Context) -> Result<u32, Error> {
+//     let screen = ffi::XScreenOfDisplay(ctx.display, ctx.screen_number);
+//     let window = ffi::XRootWindowOfScreen(screen);
+//     // Passing null pointers for the things we don't need results in a
+//     // segfault.
+//     let mut root_return = ffi::None;
+//     let mut child_return = ffi::None;
+//     let mut root_x_return = 0;
+//     let mut root_y_return = 0;
+//     let mut win_x_return = 0;
+//     let mut win_y_return = 0;
+//     let mut mask_return = 0;
+//     if ffi::XQueryPointer(
+//         ctx.display,
+//         window,
+//         &mut root_return,
+//         &mut child_return,
+//         &mut root_x_return,
+//         &mut root_y_return,
+//         &mut win_x_return,
+//         &mut win_y_return,
+//         &mut mask_return,
+//     ) == ffi::False
+//     {
+//         Err(Error::Platform(PlatformError::XQueryPointer))
+//     } else {
+//         Ok(mask_return)
+//     }
+// }
 
 unsafe fn key_with_mods_event(ctx: &Context, info: &KeyInfo, down: bool) -> Result<(), Error> {
     // We cannot use XSendEvent here. XSendEvent marks events as fake by
