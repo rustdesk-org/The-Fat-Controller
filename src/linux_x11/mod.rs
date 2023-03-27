@@ -33,7 +33,7 @@ pub struct Context {
     pub key_map_vec: Vec<std::collections::HashMap<char, KeyInfo>>,
     unused_keycodes: Vec<ffi::KeyCode>,
     unused_index: u32,
-    remap_keysym: HashMap<u64, ffi::KeyCode>,
+    remap_keysym: HashMap<ffi::KeySym, ffi::KeyCode>,
     modifier_map: *const ffi::XModifierKeymap,
     last_group: u8,
 }
