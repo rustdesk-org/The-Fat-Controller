@@ -13,7 +13,7 @@ lazy_static::lazy_static! {
 }
 
 fn main() -> anyhow::Result<()> {
-    let mut kbd = KBD_CONTEXT.lock().unwrap();
+    // let mut kbd = KBD_CONTEXT.lock().unwrap();
 
     // let mut ctx: Mutex<Context> = Mutex::new(Context::new().unwrap());
 
@@ -27,10 +27,10 @@ fn main() -> anyhow::Result<()> {
     //     ctx.ascii_char(b'\n')?;
     // }
 
-    KBD_CONTEXT.lock().unwrap().key_down(Key::Shift);
-    KBD_CONTEXT.lock().unwrap().unicode_char_down('1');
-    KBD_CONTEXT.lock().unwrap().unicode_char_up('1');
-    KBD_CONTEXT.lock().unwrap().key_up(Key::Shift);
+    KBD_CONTEXT.lock().unwrap().key_down(Key::Shift).unwrap();
+    KBD_CONTEXT.lock().unwrap().unicode_char_down('1').unwrap();
+    KBD_CONTEXT.lock().unwrap().unicode_char_up('1').unwrap();
+    KBD_CONTEXT.lock().unwrap().key_up(Key::Shift).unwrap();
     
 
     // let c = 'b'; // â Q q ¡(shift+altgr) ^ \\

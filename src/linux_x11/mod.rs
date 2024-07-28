@@ -159,12 +159,17 @@ unsafe fn create_key_map(
                     ffi::XkbKeycodeToKeysym(display, keycode, group as c_uint, level as c_uint);
                 let mut modifiers = 0;
 
-                let maps =
-                    std::slice::from_raw_parts((*key_type).map, (*key_type).map_count as usize);
-                for map in maps {
-                    if map.active == ffi::True && map.level == level {
-                        modifiers = map.mods.mask;
-                        break;
+                if !(*key_type).map.is_null()
+                    && (*key_type).map.is_aligned()
+                    && (*key_type).map_count as usize <= isize::MAX as usize
+                {
+                    let maps =
+                        std::slice::from_raw_parts((*key_type).map, (*key_type).map_count as usize);
+                    for map in maps {
+                        if map.active == ffi::True && map.level == level {
+                            modifiers = map.mods.mask;
+                            break;
+                        }
                     }
                 }
 
