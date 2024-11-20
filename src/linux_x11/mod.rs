@@ -160,7 +160,8 @@ unsafe fn create_key_map(
                 let mut modifiers = 0;
 
                 if !(*key_type).map.is_null()
-                    && (*key_type).map.is_aligned()
+                    // to-do: Replace to `ptr.is_aligned()`` when upgrading to Rust 1.79
+                    && crate::utils::is_aligned((*key_type).map)
                     && (*key_type).map_count as usize <= isize::MAX as usize
                 {
                     let maps =
